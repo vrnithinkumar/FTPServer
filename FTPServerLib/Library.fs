@@ -16,7 +16,11 @@ module ServerHelpers =
       let socket = s.Accept()
       // Setting ownsSocket to false allows us to later re-use a socket.
       let stream = new NetworkStream(socket) 
-      printfn "Received request"
+      let buffer: byte [] = Array.zeroCreate 256
+      let readLen = stream.Read(buffer,0, 256)
+      let respString = System.Text.Encoding.UTF8.GetString(buffer)
+      //socket.Receive
+      printfn "Received request data : %s " respString
       let response = [|
         "HTTP/1.1 200 OK\r\n"B
         "Content-Type: text/plain\r\n"B
