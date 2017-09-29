@@ -7,6 +7,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FTPServerLib", "FTPServerLi
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FTPServerTest", "FTPServerTest\FTPServerTest.fsproj", "{14430E20-8A83-4C7B-92EA-ABEA67507152}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ConsoleApp", "ConsoleApp\ConsoleApp.fsproj", "{AB7D4738-A70A-4828-BB07-66225C5BD1AD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,5 +46,17 @@ Global
 		{14430E20-8A83-4C7B-92EA-ABEA67507152}.Release|x64.Build.0 = Release|x64
 		{14430E20-8A83-4C7B-92EA-ABEA67507152}.Release|x86.ActiveCfg = Release|x86
 		{14430E20-8A83-4C7B-92EA-ABEA67507152}.Release|x86.Build.0 = Release|x86
+		{AB7D4738-A70A-4828-BB07-66225C5BD1AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB7D4738-A70A-4828-BB07-66225C5BD1AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB7D4738-A70A-4828-BB07-66225C5BD1AD}.Debug|x64.ActiveCfg = Debug|x64
+		{AB7D4738-A70A-4828-BB07-66225C5BD1AD}.Debug|x64.Build.0 = Debug|x64
+		{AB7D4738-A70A-4828-BB07-66225C5BD1AD}.Debug|x86.ActiveCfg = Debug|x86
+		{AB7D4738-A70A-4828-BB07-66225C5BD1AD}.Debug|x86.Build.0 = Debug|x86
+		{AB7D4738-A70A-4828-BB07-66225C5BD1AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB7D4738-A70A-4828-BB07-66225C5BD1AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB7D4738-A70A-4828-BB07-66225C5BD1AD}.Release|x64.ActiveCfg = Release|x64
+		{AB7D4738-A70A-4828-BB07-66225C5BD1AD}.Release|x64.Build.0 = Release|x64
+		{AB7D4738-A70A-4828-BB07-66225C5BD1AD}.Release|x86.ActiveCfg = Release|x86
+		{AB7D4738-A70A-4828-BB07-66225C5BD1AD}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 EndGlobal
