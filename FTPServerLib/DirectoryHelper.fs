@@ -14,7 +14,16 @@ module DirectoryHelpers =
             dir.GetDirectories()
             |> Array.map (fun x -> x.ToString())
         Array.append files folders
-
+    
+    let getResponseToDir =
+        let filesAndFolders =
+            directoryDetails pathToTest
+            |> String.concat "\n"
+        ". \n..\n"+filesAndFolders
+    
     let getFile file =
         let file = FileInfo(file)
         file
+
+    let getTheCurrentDirectory =
+        pathToTest

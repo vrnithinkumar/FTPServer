@@ -29,7 +29,7 @@ module ClientHelpers =
             let bytesRec = client.Receive(buffer);  
             let respString = System.Text.Encoding.UTF8.GetString(buffer) 
  
-            Console.WriteLine("Echoed test = {0}",  respString)
+            Console.WriteLine("Result : {0}",  respString)
 
         // Release the socket.  
         client.Shutdown(SocketShutdown.Both);  
