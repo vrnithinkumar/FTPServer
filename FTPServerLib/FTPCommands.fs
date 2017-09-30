@@ -1,4 +1,5 @@
 namespace FTPServerLib
+
 module FTPCommands =
     type SupportedCommands =
         | LS
@@ -7,6 +8,7 @@ module FTPCommands =
         | HELP
         | DIR
         | UNSUPPORTED
+
     let parseFTPCommand s = 
         match s with
         | "ls" -> SupportedCommands.LS

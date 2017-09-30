@@ -5,8 +5,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="DirectoryHelper.fs"/>
-    <Compile Include="FTPCommands.fs"/>
+    <Compile Include="DirectoryHelper.fs" />
+    <Compile Include="FTPCommands.fs" />
+    <Compile Include="FTPClient.fs" />
     <Compile Include="Library.fs" />
   </ItemGroup>
 

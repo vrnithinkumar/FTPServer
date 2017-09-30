@@ -1,16 +1,12 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Include="ServerMain.fs" />
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\FTPServerLib\FTPServerLib.fsproj" />
   </ItemGroup>
-
+  <ItemGroup>
+    <Compile Include="ClientMain.fs" />
+  </ItemGroup>
 </Project>
