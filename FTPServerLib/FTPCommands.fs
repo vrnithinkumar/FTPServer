@@ -39,9 +39,11 @@ module FTPCommands =
     
     let getResponse commandString =
         printfn "Creating response for %s" commandString
-        let trimmedString =commandString.Trim()
+        let trimmedString = commandString.Trim()
+        let isSame = trimmedString = commandString
+        printfn "Is Same?  ; %b" isSame
         let response =
-            match commandString with
+            match trimmedString with
                 | "login" -> 
                     printfn "Matched : %s " commandString
                     "Login as anonymous user!"

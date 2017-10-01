@@ -40,4 +40,3 @@ module ServerHelpers =
     socket.Shutdown(SocketShutdown.Both)
     socket.Close()
     printfn "Finally finished!"
-
