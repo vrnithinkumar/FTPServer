@@ -14,7 +14,10 @@ module ServerHelpers =
   let readAndWriteToStream (stream:NetworkStream) =
     let buffer: byte [] = Array.zeroCreate 1024
     let readLen = stream.Read(buffer, 0, 1024)
-    let ftpCommand = System.Text.Encoding.ASCII.GetString(buffer) 
+    let ftpCommand = 
+      System.Text.Encoding.ASCII.GetString(buffer).toChar
+      |> 
+    
     printfn "Received Command : %s " ftpCommand
     let responseToSend = getResponse ftpCommand
     printfn "Response is : %s " responseToSend
