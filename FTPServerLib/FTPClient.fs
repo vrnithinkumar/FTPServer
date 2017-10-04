@@ -18,7 +18,7 @@ module ClientHelpers =
             let userInput = Console.ReadLine()
             if userInput = "" then
                 keepRunning <- false
-            let msg = System.Text.Encoding.ASCII.GetBytes(userInput);  
+            let msg = System.Text.Encoding.ASCII.GetBytes(userInput+"\r");  
 
             // Send the data through the socket.  
             let bytesSent = client.Send(msg);  

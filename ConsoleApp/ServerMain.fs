@@ -1,8 +1,7 @@
 ﻿// Learn more about F# at http://fsharp.org
 
 open System
-open FTPServerLib.ServerHelpers
-open FTPServerLib.DirectoryHelpers
+open FTPServerLib.Main
 [<EntryPoint>]
 let main argv =
     printfn "Hello World from F#!"

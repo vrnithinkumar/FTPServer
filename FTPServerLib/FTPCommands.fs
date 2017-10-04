@@ -2,31 +2,41 @@ namespace FTPServerLib
 open DirectoryHelpers
 
 module FTPCommands =
+    let singleCommands = ["pwd" ; "close"; "ls" ; "help"]
     type SupportedCommands =
         | PWD
-        | LOGIN
+        | USER of string
+        | PASS of string
         | CLOSE
         | HELP
-        | DIR
+        | CD of string
         | UNSUPPORTED
 
     let parseFTPCommand command = 
         printfn "Parsing %s" command
-        match command with
-        | "pwd" -> SupportedCommands.PWD
-        | "login" -> SupportedCommands.LOGIN
-        | "close" -> SupportedCommands.CLOSE
-        | "help" -> SupportedCommands.HELP
-        | "dir" -> SupportedCommands.DIR
-        | _ -> SupportedCommands.UNSUPPORTED
+        let isSingleCommand =
+            singleCommands
+            |> List.contains command
+        if isSingleCommand then
+            match command.ToLower() with
+            | "pwd" -> PWD
+            | "close" -> CLOSE
+            | "help" -> HELP
+            | _ -> UNSUPPORTED
+        else
+            let [| cmdName; cmdArgs |] = command.Split ' '
+            match cmdName.ToLower() with
+            | "user" -> let userName = cmdArgs in USER userName        // ---> USER slacker   ---> PASS XXXX   ---> PORT 192,168,150,80,14,178
+            | "pass" -> let password = cmdArgs in PASS password
+            | "dir" -> let directory = cmdArgs in CD directory
+            | _ -> UNSUPPORTED
  
     let getResponseByParsing commandString =
         let command = parseFTPCommand commandString
         printfn "Command %s is %A" commandString command
         match command with
-            | SupportedCommands.LOGIN -> "Login as anonymous user!"
-            | SupportedCommands.CLOSE -> "Connections is closed"
-            | SupportedCommands.DIR   -> getResponseToDir
+            | CLOSE -> "Connections is closed"
+            //| DIR   -> getResponseToDir
             | SupportedCommands.PWD   -> getTheCurrentDirectory
             | SupportedCommands.HELP  -> "Supported Commands are \n ls \n login \n close \n help \n dir"
             | SupportedCommands.UNSUPPORTED  -> "Error! \n Not supported!"
@@ -39,11 +49,9 @@ module FTPCommands =
     
     let getResponse commandString =
         printfn "Creating response for %s" commandString
-        let trimmedString = commandString.Trim()
-        let isSame = trimmedString = commandString
-        printfn "Is Same?  ; %b" isSame
+        let trimmedString =commandString.Trim()
         let response =
-            match trimmedString with
+            match commandString with
                 | "login" -> 
                     printfn "Matched : %s " commandString
                     "Login as anonymous user!"
@@ -65,9 +73,3 @@ module FTPCommands =
                     
         printfn "Resp is ##%s" response
         response
-
-    let Test ()= 
-       let commandBuffer = System.Text.Encoding.UTF8.GetBytes("help")
-       let ftpCommand = System.Text.Encoding.UTF8.GetString(commandBuffer)
-       let command = getResponse ftpCommand
-       printfn "Command %s is %A" "help" command

@@ -42,29 +42,28 @@ module FTPCommands =
         | PASS of string
         | CLOSE
         | HELP
-        | DIR
+        | DIR of string
         | UNSUPPORTED
 
     let parseFTPCommand command = 
         printfn "Parsing %s" command
         
-        let [| cmdName; cmdArgs |] = command.Split ' ' 
+        let [| cmdName; cmdArgs |] = command.Split ' '
         match cmdName.ToLower() with
-        | "pwd" -> SupportedCommands.PWD
+        | "pwd" -> PWD
         | "user" -> let userName = cmdArgs in USER userName        // ---> USER slacker   ---> PASS XXXX   ---> PORT 192,168,150,80,14,178
         | "pass" -> let password = cmdArgs in PASS password
-        | "close" -> SupportedCommands.CLOSE
-        | "help" -> SupportedCommands.HELP
-        | "dir" -> SupportedCommands.DIR
-        | _ -> SupportedCommands.UNSUPPORTED
+        | "close" -> CLOSE
+        | "help" -> HELP
+        | "dir" -> let directory = cmdArgs in DIR directory
+        | _ -> UNSUPPORTED
  
     let getResponseByParsing commandString =
         let command = parseFTPCommand commandString
         printfn "Command %s is %A" commandString command
         match command with
-            | SupportedCommands.LOGIN -> "Login as anonymous user!"
-            | SupportedCommands.CLOSE -> "Connections is closed"
-            | SupportedCommands.DIR   -> getResponseToDir
+            | CLOSE -> "Connections is closed"
+            | DIR   -> getResponseToDir
             | SupportedCommands.PWD   -> getTheCurrentDirectory
             | SupportedCommands.HELP  -> "Supported Commands are \n ls \n login \n close \n help \n dir"
             | SupportedCommands.UNSUPPORTED  -> "Error! \n Not supported!"
