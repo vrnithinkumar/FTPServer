@@ -2,7 +2,7 @@ namespace FTPServerLib
 open System.IO
 
 module DirectoryHelpers =
-    let pathToTest = "/Users/vr/WorkSpace/gist/" 
+    let pathToTest = Directory.GetCurrentDirectory()
     let directoryDetails path = 
         let dir = DirectoryInfo(path)
         
