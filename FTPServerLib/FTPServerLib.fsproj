@@ -1,14 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
-
   <ItemGroup>
     <Compile Include="DirectoryHelper.fs" />
     <Compile Include="FTPCommands.fs" />
-    <Compile Include="FTPClient.fs" />
     <Compile Include="Library.fs" />
+    <Compile Include="FTPClient.fs" />
   </ItemGroup>
-
 </Project>

@@ -66,6 +66,7 @@ module UserSession =
             match cmd with
             | CLOSE -> ()                    
             | _ -> readAndParseCommand ()
+            stream.Flush()
         readAndParseCommand ()
     
     let createSession socket =

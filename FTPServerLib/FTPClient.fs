@@ -4,6 +4,7 @@ open System.IO
 open System.Net
 open System.Net.Sockets
 open System.Threading
+open ServerHelpers
 
 module ClientHelpers =
     let CreateClient(server:string, port:int) =  
@@ -12,6 +13,7 @@ module ClientHelpers =
         client.Connect(localEndPoint)
         Console.WriteLine "Socket connected"
         printfn "Sending request ..."
+        use stream = new NetworkStream(client) 
         let mutable keepRunning = true
         while keepRunning do
             // Encode the data string into a byte array.  
@@ -21,15 +23,11 @@ module ClientHelpers =
             let msg = System.Text.Encoding.ASCII.GetBytes(userInput+"\r");  
 
             // Send the data through the socket.  
-            let bytesSent = client.Send(msg);  
-            printfn "The data of lentgth %d is sent." bytesSent
+            stream.Write (msg, 0, msg.Length)
+            printfn "Meggage is passed!"
 
-            // Receive the response from the remote device.  
-            let buffer: byte [] = Array.zeroCreate 1024
-            let bytesRec = client.Receive(buffer);  
-            let respString = System.Text.Encoding.UTF8.GetString(buffer) 
- 
-            Console.WriteLine("Result : {0}",  respString)
+            let respString = readFromStream stream
+            printfn "Reply from server : %s " respString
 
         // Release the socket.  
         client.Shutdown(SocketShutdown.Both);  
