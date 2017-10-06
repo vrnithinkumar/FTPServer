@@ -73,3 +73,23 @@ module FTPCommands =
                     
         printfn "Resp is ##%s" response
         response
+
+    type ServerReturnCodeEnum =
+        | FTPServeReady = 220
+        | PasswordRequest = 331 
+        | UserLoggedIn = 230
+        | NameSystemTyp = 215
+        | Successfull = 200
+        | FileStatusOkay = 150
+        | ClosingDataConnection = 226
+        | ClosingControlConnection = 221
+    let GetServerReturnMessageWithCode Code =
+        match Code with
+        | ServerReturnCodeEnum.FTPServeReady            -> "220 FTP server ready."
+        | ServerReturnCodeEnum.PasswordRequest          -> "331 Password required." 
+        | ServerReturnCodeEnum.UserLoggedIn             -> "230 slacker logged in."
+        | ServerReturnCodeEnum.NameSystemTyp            -> "215"
+        | ServerReturnCodeEnum.Successfull              -> "200 PORT command successful."
+        | ServerReturnCodeEnum.FileStatusOkay           -> "150"
+        | ServerReturnCodeEnum.ClosingDataConnection    -> "226 Transfer complete."
+        | ServerReturnCodeEnum.ClosingControlConnection -> "221 Goodbye."

@@ -76,7 +76,7 @@ module UserSession =
         // ---> USER slacker
         // 331 Password required for slacker.
         use stream = new NetworkStream(socket) 
-        
+        writeToStream stream "Connected to FTP server by F#! \n"  
         let command = readCommand stream
         match command with
         | USER userName -> // act on supplied name
