@@ -47,9 +47,8 @@ module ServerHelpers =
         readFromStream >> parseFTPCommand
     
     let RespondWithServerCode  (stream:NetworkStream) code =
-        let resp =  GetServerReturnMessageWithCode code 
-        printfn "Resp %s" resp 
-        writeToStream stream true resp
+        GetServerReturnMessageWithCode code 
+        |> writeToStream stream true
 
 module UserSession =
     open ServerHelpers
@@ -59,41 +58,45 @@ module UserSession =
         // do stuff
         let rec readAndParseCommand () =
             let mutable port = None        // ---> PORT 192,168,150,80,14,178
-            //use stream = new NetworkStream(socket)
             let cmd = readCommand stream
             match cmd with
             | USER user -> failwithf "shouldn't call USER command with args:[%s]" user
             | PASS pass -> failwithf "shouldn't call PASS command with args:[%s]" pass
-            | HELP -> writeToStream stream true "Help just google it dude"
-            | CLOSE -> writeToStream stream true "Good bye"
-            | UNSUPPORTED -> writeToStream stream true "Unsupported command"
-            | _ -> writeToStream stream true "unable to find the proper command"
+            | HELP -> writeToStream stream true "Help just google it dude!"
+            | CLOSE -> RespondWithServerCode stream ServerReturnCodeEnum.ClosingControlConnection
+            | UNSUPPORTED -> writeToStream stream true "Unsupported command!"
+            | _ -> writeToStream stream true "Unable to find the proper command!"
+            
             match cmd with
-            | CLOSE -> ()                    
+            | CLOSE -> exit 0                   
             | _ -> readAndParseCommand ()
-           // stream.Flush()
+
         readAndParseCommand ()
     
     let handleUserLogin (userName:string, stream:NetworkStream) = 
-        "Welocme User : " + userName |>  writeToStream stream false
+        "Welocome User : " + userName |>  writeToStream stream false
         // ---> USER slacker
         // 331 Password required for slacker.
         RespondWithServerCode stream ServerReturnCodeEnum.PasswordRequest
-        startUserSession userName stream
+        let command = readCommand stream
+        match command with
+            | PASS passwd -> 
+                if(passwd = "test") then 
+                    RespondWithServerCode stream ServerReturnCodeEnum.Successfull
+                    startUserSession userName stream 
+                else 
+                    RespondWithServerCode stream ServerReturnCodeEnum.InvalidCredential
+            | _ -> RespondWithServerCode stream ServerReturnCodeEnum.PasswordRequest
     
     let createSession (socket:Socket) =
         let stream = new NetworkStream(socket, false) 
         writeToStream stream false "Connected to FTP server by F#! \n"  
-        let result = GetServerReturnMessageWithCode ServerReturnCodeEnum.FTPServeReady
-        RespondWithServerCode stream ServerReturnCodeEnum.FTPServeReady
+        //RespondWithServerCode stream ServerReturnCodeEnum.FTPServeReady
         while true do
             let command = readCommand stream
             match command with
             | USER userName -> handleUserLogin (userName, stream)
             | _ -> writeToStream stream true "Login with USER command!."  
-        (*let stream = new NetworkStream(socket) 
-        while true do
-            readAndWriteToStream stream*)
     
         stream.Close()
         socket.Shutdown(SocketShutdown.Both)
@@ -112,6 +115,5 @@ module Main =
         
         while true do
             let socket1 = socket.Accept()
-            //send  220 testbox2.slacksite.com FTP server ready.
             createSession socket1
         printfn "Finally finished!"
