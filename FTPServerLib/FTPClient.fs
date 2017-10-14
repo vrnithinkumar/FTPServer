@@ -13,23 +13,25 @@ module ClientHelpers =
         client.Connect(localEndPoint)
         Console.WriteLine "Socket connected"
         printfn "Sending request ..."
-        use stream = new NetworkStream(client) 
+        let stream = new NetworkStream(client, false) 
+        //writeToStream stream ""
         let mutable keepRunning = true
         while keepRunning do
             // Encode the data string into a byte array.  
             let userInput = Console.ReadLine()
             if userInput = "" then
                 keepRunning <- false
-            let msg = System.Text.Encoding.ASCII.GetBytes(userInput+"\r");  
 
             // Send the data through the socket.  
-            stream.Write (msg, 0, msg.Length)
-            printfn "Meggage is passed!"
-
+            userInput+"\r"
+            |> writeToStream stream true
+            System.Threading.Thread.Sleep 3000
+            //printfn "Meggage is passed!"
             let respString = readFromStream stream
             printfn "Reply from server : %s " respString
 
         // Release the socket.  
+        stream.Close()
         client.Shutdown(SocketShutdown.Both);  
         client.Close(); 
         printfn "Finally finished!"
