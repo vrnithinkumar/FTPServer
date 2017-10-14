@@ -9,20 +9,6 @@ open DirectoryHelpers
 
 // All socket and conneection related stuff.
 module ServerHelpers =
-    let readAndWriteToStream (stream:NetworkStream) =
-        let buffer: byte [] = Array.zeroCreate 1024
-        let readLen = stream.Read(buffer, 0, 1024)
-        let ftpCommand = System.Text.Encoding.ASCII.GetString(buffer) 
-        // printfn "Received Command : %s " ftpCommand
-        let responseToSend = getResponse ftpCommand
-        // printfn "Response is : %s " responseToSend
-    
-        let commandResponse = 
-          responseToSend
-          |> System.Text.Encoding.ASCII.GetBytes
-    
-        stream.Write(commandResponse, 0, commandResponse.Length)
-        
     let readFromStream (stream:NetworkStream) =
         let buffer: byte [] = Array.zeroCreate 1024
         let readLen = stream.Read(buffer, 0, 1024)
@@ -65,6 +51,7 @@ module UserSession =
             | HELP -> writeToStream stream true "Help just google it dude!"
             | CLOSE -> RespondWithServerCode stream ServerReturnCodeEnum.ClosingControlConnection
             | UNSUPPORTED -> writeToStream stream true "Unsupported command!"
+            | LIST ->  writeToStream stream true getResponseToDir
             | _ -> writeToStream stream true "Unable to find the proper command!"
             
             match cmd with

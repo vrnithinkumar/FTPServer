@@ -9,6 +9,7 @@ module FTPCommands =
         | PASS of string
         | CLOSE
         | HELP
+        | LIST 
         | CD of string
         | UNSUPPORTED
 
@@ -23,6 +24,7 @@ module FTPCommands =
             | "pwd" -> PWD
             | "close" -> CLOSE
             | "help" -> HELP
+            | "list" -> LIST
             | _ -> UNSUPPORTED
         
         else
