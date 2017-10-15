@@ -33,7 +33,7 @@ module ServerHelpers =
         readFromStream >> parseFTPCommand
     
     let RespondWithServerCode  (stream:NetworkStream) code =
-        GetServerReturnMessageWithCode code 
+        getServerReturnMessageWithCode code 
         |> writeToStream stream true
 
 module UserSession =
