@@ -45,7 +45,7 @@ module FTPCommands =
             | SupportedCommands.HELP  -> "Supported Commands are \n ls \n login \n close \n help \n dir"
             | SupportedCommands.UNSUPPORTED  -> "Error! \n Not supported!"
 
-    let getResponseToDir =
+    let responseToDir =
         let filesAndFolders =
             directoryDetails pathToTest
             |> String.concat "\n"
@@ -62,7 +62,7 @@ module FTPCommands =
         | ClosingControlConnection = 221
         | InvalidCredential = 430
 
-    let GetServerReturnMessageWithCode code =
+    let getServerReturnMessageWithCode code =
         match code with
         | ServerReturnCodeEnum.FTPServeReady            -> "220 FTP server ready."
         | ServerReturnCodeEnum.PasswordRequest          -> "331 Password required." 
