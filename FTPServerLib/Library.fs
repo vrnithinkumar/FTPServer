@@ -76,18 +76,20 @@ module UserSession =
             | _ -> RespondWithServerCode stream ServerReturnCodeEnum.PasswordRequest
     
     let createSession (socket:Socket) =
-        let stream = new NetworkStream(socket, false) 
-        writeToStream stream false "Connected to FTP server by F#! \n"  
-        //RespondWithServerCode stream ServerReturnCodeEnum.FTPServeReady
-        while true do
-            let command = readCommand stream
-            match command with
-            | USER userName -> handleUserLogin (userName, stream)
-            | _ -> writeToStream stream true "Login with USER command!."  
+        async {
+            let stream = new NetworkStream(socket, false) 
+            writeToStream stream false "Connected to FTP server by F#! \n"  
+            //RespondWithServerCode stream ServerReturnCodeEnum.FTPServeReady
+            while true do
+                let command = readCommand stream
+                match command with
+                | USER userName -> handleUserLogin (userName, stream)
+                | _ -> writeToStream stream true "Login with USER command!."  
     
-        stream.Close()
-        socket.Shutdown(SocketShutdown.Both)
-        socket.Close()
+            stream.Close()
+            socket.Shutdown(SocketShutdown.Both)
+            socket.Close()
+        }
 
 module Main =
     open UserSession
@@ -100,7 +102,19 @@ module Main =
         socket.Listen(111)  
         printfn "Waiting for request ..."
         
-        while true do
+        let connectionLimit = 10
+        let connectionCount = ref 0
+        
+        while !connectionCount < connectionLimit do
             let socket1 = socket.Accept()
-            createSession socket1
+            incr connectionCount    // increase value of connectionCount by 1
+            
+            let cancellationSource = new CancellationTokenSource()
+            let sessionAsync = createSession socket1
+                               
+            Async.StartWithContinuations (sessionAsync, (fun () -> decr connectionCount), // decrease by 1
+                                                        (fun (x:exn) -> printfn "%s \n%s" x.Message x.StackTrace
+                                                                        decr connectionCount),
+                                                        (fun (x:OperationCanceledException) -> printfn "session cancelled"
+                                                                                               decr connectionCount)) 
         printfn "Finally finished!"
