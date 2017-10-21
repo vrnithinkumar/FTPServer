@@ -31,8 +31,6 @@ module ClientHelpers =
         
     let CreateClient() =  
         let client = createCommandSocket false
-        Console.WriteLine "Socket connected"
-        printfn "Sending request ..."
         let stream = new NetworkStream(client, false) 
         //writeToStream stream ""
         let mutable keepRunning = true

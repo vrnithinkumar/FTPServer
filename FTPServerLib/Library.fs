@@ -39,11 +39,12 @@ module ServerHelpers =
         let asciiBuffer = System.Text.Encoding.ASCII.GetString(buffer).ToCharArray() 
         let ftpCommand = 
             let charArray: char array = asciiBuffer |> Seq.takeWhile (fun c -> c <> '\r') |> Seq.toArray
-            System.String charArray
+            String charArray
         //printfn "Received Command : %s " ftpCommand
         ftpCommand
-    //let writeToSocket(socket:Socket) (data:byte array) =
-      //  socket.Send(data, 0, data.Length) 
+    
+    let writeToSocket(socket:Socket) (data:byte array) =
+        socket.Send (data) 
     
     let writeToFile file (dataToWrite:string) =
         let fullPath = Path.Combine(currentDirectory(), file) 
@@ -113,7 +114,7 @@ module UserSession =
         readAndParseCommand ()
     
     let handleUserLogin (userName:string, stream:NetworkStream) = 
-        sprintf "Welocome User : %s \n" userName |>  writeToStream stream false
+        sprintf "Welocome User,  %s !\n" userName |>  writeToStream stream false
         // ---> USER slacker
         // 331 Password required for slacker.
         RespondWithServerCode stream ServerReturnCodeEnum.PasswordRequest
