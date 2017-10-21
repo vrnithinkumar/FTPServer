@@ -2,7 +2,7 @@ namespace FTPServerLib
 open DirectoryHelpers
 
 module FTPCommands =
-    let singleCommands = ["pwd" ; "close"; "ls" ; "help"]
+
     type SupportedCommands =
         | PWD
         | USER of string
@@ -11,6 +11,7 @@ module FTPCommands =
         | HELP
         | LIST 
         | CD of string
+        | CAT of string
         | UNSUPPORTED
 
     let parseFTPCommand command = 
@@ -24,7 +25,7 @@ module FTPCommands =
             | "pwd" -> PWD
             | "close" -> CLOSE
             | "help" -> HELP
-            | "list" -> LIST
+            | "ls" -> LIST
             | _ -> UNSUPPORTED
         
         else
@@ -32,22 +33,24 @@ module FTPCommands =
             match cmdName.ToLower() with
             | "user" -> let userName = cmdArgs in USER userName        // ---> USER slacker   ---> PASS XXXX   ---> PORT 192,168,150,80,14,178
             | "pass" -> let password = cmdArgs in PASS password
-            | "dir" -> let directory = cmdArgs in CD directory
+            | "cd" -> let directory = cmdArgs in CD directory
+            | "cat" -> let fileName = cmdArgs in CAT fileName
             | _ -> UNSUPPORTED
  
     let getResponseByParsing commandString =
         let command = parseFTPCommand commandString
         printfn "Command %s is %A" commandString command
         match command with
-            | CLOSE -> "Connections is closed"
-            | DIR   -> getResponseToDir
-            | SupportedCommands.PWD   -> getTheCurrentDirectory
-            | SupportedCommands.HELP  -> "Supported Commands are \n ls \n login \n close \n help \n dir"
-            | SupportedCommands.UNSUPPORTED  -> "Error! \n Not supported!"
+            | CLOSE -> "Connection is closed"
+            | DIR   -> getResponseToDir()
+            | HELP  -> "Supported Commands are \n ls \n login \n close \n help \n dir"
+            | UNSUPPORTED  -> "Error! \n Not supported!"
+    
 
     let responseToDir =
         let filesAndFolders =
-            directoryDetails pathToTest
+            currentDirectory()
+            |> directoryDetails 
             |> String.concat "\n"
         ". \n..\n" + filesAndFolders
 
@@ -64,12 +67,13 @@ module FTPCommands =
 
     let getServerReturnMessageWithCode code =
         match code with
-        | ServerReturnCodeEnum.FTPServeReady            -> "220 FTP server ready."
-        | ServerReturnCodeEnum.PasswordRequest          -> "331 Password required." 
-        | ServerReturnCodeEnum.UserLoggedIn             -> "230 user logged in."
-        | ServerReturnCodeEnum.NameSystemTyp            -> "215"
-        | ServerReturnCodeEnum.Successfull              -> "200 PORT command successful."
-        | ServerReturnCodeEnum.FileStatusOkay           -> "150"
-        | ServerReturnCodeEnum.ClosingDataConnection    -> "226 Transfer complete."
-        | ServerReturnCodeEnum.ClosingControlConnection -> "221 Goodbye."
-        | ServerReturnCodeEnum.InvalidCredential        -> "430 Inavalid user name or password."
+        | ServerReturnCodeEnum.FTPServeReady            as s -> sprintf "%d FTP server ready." ((int)s)
+        | ServerReturnCodeEnum.PasswordRequest          as s -> sprintf "%d  Password required."  ((int)s)
+        | ServerReturnCodeEnum.UserLoggedIn             as s -> sprintf "%d  user logged in." ((int)s)
+        | ServerReturnCodeEnum.NameSystemTyp            as s -> sprintf "%d" ((int)s)
+        | ServerReturnCodeEnum.Successfull              as s -> sprintf "%d  PORT command successful."  ((int)s)  
+        | ServerReturnCodeEnum.FileStatusOkay           as s -> sprintf "%d " ((int)s)
+        | ServerReturnCodeEnum.ClosingDataConnection    as s -> sprintf "%d  Transfer complete." ((int)s)
+        | ServerReturnCodeEnum.ClosingControlConnection as s -> sprintf "%d  Goodbye." ((int)s)
+        | ServerReturnCodeEnum.InvalidCredential        as s -> sprintf "%d  Inavalid user name or password." ((int)s)
+

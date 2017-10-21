@@ -7,8 +7,31 @@ open System.Threading
 open FTPCommands
 open DirectoryHelpers
 
+module ServerConfiguration = 
+    let commandPort = 2121
+    let dataPort = 2122
+    let localHost = "127.0.0.1"
+
 // All socket and conneection related stuff.
 module ServerHelpers =
+    open ServerConfiguration
+
+    let createSocket port toListen =
+        let commandLocalEndPoint = IPEndPoint(IPAddress.Parse(localHost), port)  
+        let socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
+        
+        match toListen with
+        | true ->  
+            socket.Bind(commandLocalEndPoint)
+            socket.Listen(111)  
+        | false -> socket.Connect(commandLocalEndPoint)
+        
+        socket
+
+    let createCommandSocket = createSocket commandPort
+    
+    let createDataSocket = createSocket dataPort
+    
     let readFromStream (stream:NetworkStream) =
         let buffer: byte [] = Array.zeroCreate 1024
         let readLen = stream.Read(buffer, 0, 1024)
@@ -23,6 +46,7 @@ module ServerHelpers =
       //  socket.Send(data, 0, data.Length) 
     let writeBytesToStream (stream:NetworkStream) (data:byte array) =
         stream.Write(data, 0, data.Length)
+        stream.Flush()
 
     let writeToStream (stream:NetworkStream) endOfMessage (data:string) =
         let dataToWrite = if endOfMessage then data+"\r" else data 
@@ -36,8 +60,35 @@ module ServerHelpers =
         getServerReturnMessageWithCode code 
         |> writeToStream stream true
 
+ module CommandResponse =
+    open ServerHelpers
+
+    let writeFileToClient fileName =
+      let data = getFileContent fileName
+      System.Threading.Thread.Sleep 3000
+      let dataSendingSocket = createDataSocket false
+      let stream = new NetworkStream(dataSendingSocket, false) 
+      writeToStream stream true data
+
+    let handleCommand stream cmd =
+        match cmd with
+        | USER user -> failwithf "shouldn't call USER command with args:[%s]" user
+        | PASS pass -> failwithf "shouldn't call PASS command with args:[%s]" pass
+        | HELP -> writeToStream stream true "Help just google it dude!"
+        | CLOSE -> RespondWithServerCode stream ServerReturnCodeEnum.ClosingControlConnection
+        | PWD -> currentDirectory() |> sprintf "Current dir is : %s " |> writeToStream stream true 
+        | CD newPath  ->  changeCurrentDirectory newPath    
+                          writeToStream stream false "Directory got changed!.\n"
+                          RespondWithServerCode stream ServerReturnCodeEnum.Successfull
+        | LIST ->  getResponseToDir() |> writeToStream stream true 
+        | CAT file ->   RespondWithServerCode stream ServerReturnCodeEnum.Successfull 
+                        writeFileToClient file
+        | UNSUPPORTED -> writeToStream stream true "Unsupported command!"
+        | _ -> writeToStream stream true "Unable to find the proper command!"
+    
 module UserSession =
     open ServerHelpers
+    open CommandResponse
     /// this is ran after the user successfully logged in
     let startUserSession userName (stream:NetworkStream) =
         // parse commands
@@ -45,15 +96,7 @@ module UserSession =
         let rec readAndParseCommand () =
             let mutable port = None        // ---> PORT 192,168,150,80,14,178
             let cmd = readCommand stream
-            match cmd with
-            | USER user -> failwithf "shouldn't call USER command with args:[%s]" user
-            | PASS pass -> failwithf "shouldn't call PASS command with args:[%s]" pass
-            | HELP -> writeToStream stream true "Help just google it dude!"
-            | CLOSE -> RespondWithServerCode stream ServerReturnCodeEnum.ClosingControlConnection
-            | UNSUPPORTED -> writeToStream stream true "Unsupported command!"
-            | LIST ->  writeToStream stream true getResponseToDir
-            | _ -> writeToStream stream true "Unable to find the proper command!"
-            
+            handleCommand stream cmd
             match cmd with
             | CLOSE -> exit 0                   
             | _ -> readAndParseCommand ()
@@ -93,13 +136,9 @@ module UserSession =
 
 module Main =
     open UserSession
-    let commandPort = 2121
-    let localHost = "127.0.0.1"
+    open ServerHelpers
     let StartServer() =
-        let commandLocalEndPoint = IPEndPoint(IPAddress.Parse(localHost), commandPort)  
-        let socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
-        socket.Bind(commandLocalEndPoint)
-        socket.Listen(111)  
+        let socket = createCommandSocket true
         printfn "Waiting for request ..."
         
         let connectionLimit = 10

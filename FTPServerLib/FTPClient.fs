@@ -1,16 +1,11 @@
 namespace FTPServerLib
 open System
-open System.IO
-open System.Net
 open System.Net.Sockets
-open System.Threading
 open ServerHelpers
 
 module ClientHelpers =
-    let CreateClient(server:string, port:int) =  
-        let localEndPoint = IPEndPoint(IPAddress.Parse(server), port) 
-        let client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
-        client.Connect(localEndPoint)
+    let CreateClient() =  
+        let client = createCommandSocket false
         Console.WriteLine "Socket connected"
         printfn "Sending request ..."
         let stream = new NetworkStream(client, false) 
@@ -19,18 +14,35 @@ module ClientHelpers =
         while keepRunning do
             // Encode the data string into a byte array.  
             let userInput = Console.ReadLine()
-            if userInput = "" then
-                keepRunning <- false
+            
+            match userInput.ToLower() with
+            | "" | "close" -> keepRunning <- false
+            | _ -> ()
+                
+            match userInput.Contains("cat") with
+            | true ->  
+                let dataSendingSocket = createDataSocket true
 
-            // Send the data through the socket.  
-            userInput+"\r"
-            |> writeToStream stream true
-            System.Threading.Thread.Sleep 3000
-            //printfn "Meggage is passed!"
-            let respString = readFromStream stream
-            printfn "Reply from server : %s " respString
+                userInput+"\r"
+                |> writeToStream stream true
+                printfn "Done write inside cat "
 
-        // Release the socket.  
+                let respString = readFromStream stream
+                printfn "Reply from server : %s " respString
+                
+                let acceptedSocket = dataSendingSocket.Accept()
+                let dataStream = new NetworkStream(acceptedSocket, false) 
+                
+                let fileData = readFromStream dataStream
+                printfn "CAT result : %s " fileData 
+            | _ -> 
+                userInput+"\r"
+                |> writeToStream stream true
+                System.Threading.Thread.Sleep 3000
+                let respString = readFromStream stream
+                printfn "Reply from server : %s " respString
+
+        // Releasing the socket.  
         stream.Close()
         client.Shutdown(SocketShutdown.Both);  
         client.Close(); 
