@@ -44,6 +44,15 @@ module ServerHelpers =
         ftpCommand
     //let writeToSocket(socket:Socket) (data:byte array) =
       //  socket.Send(data, 0, data.Length) 
+    
+    let writeToFile file (dataToWrite:string) =
+        let fullPath = Path.Combine(currentDirectory(), file) 
+        use fs = File.Create(fullPath)
+        let dataInBytes = System.Text.Encoding.ASCII.GetBytes(dataToWrite); 
+        fs.Write(dataInBytes, 0, dataInBytes.Length);
+
+    let streamToFile file = readFromStream >> writeToFile file
+
     let writeBytesToStream (stream:NetworkStream) (data:byte array) =
         stream.Write(data, 0, data.Length)
         stream.Flush()
@@ -104,7 +113,7 @@ module UserSession =
         readAndParseCommand ()
     
     let handleUserLogin (userName:string, stream:NetworkStream) = 
-        "Welocome User : " + userName |>  writeToStream stream false
+        sprintf "Welocome User : %s \n" userName |>  writeToStream stream false
         // ---> USER slacker
         // 331 Password required for slacker.
         RespondWithServerCode stream ServerReturnCodeEnum.PasswordRequest
@@ -127,7 +136,7 @@ module UserSession =
                 let command = readCommand stream
                 match command with
                 | USER userName -> handleUserLogin (userName, stream)
-                | _ -> writeToStream stream true "Login with USER command!."  
+                | _ -> writeToStream stream true "Login with USER command!.\n"  
     
             stream.Close()
             socket.Shutdown(SocketShutdown.Both)
