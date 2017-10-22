@@ -34,8 +34,6 @@ module ServerHelpers =
     
     let readFromStream (stream:NetworkStream) =
         let buffer: byte [] = Array.zeroCreate 1024
-        let readLen = stream.Read(buffer, 0, 1024)
-        
         let asciiBuffer = System.Text.Encoding.ASCII.GetString(buffer).ToCharArray() 
         let ftpCommand = 
             let charArray: char array = asciiBuffer |> Seq.takeWhile (fun c -> c <> '\r') |> Seq.toArray
@@ -87,12 +85,12 @@ module ServerHelpers =
         | HELP -> writeToStream stream true "Help just google it dude!"
         | CLOSE -> RespondWithServerCode stream ServerReturnCodeEnum.ClosingControlConnection
         | PWD -> currentDirectory() |> sprintf "Current dir is : %s " |> writeToStream stream true 
-        | CD newPath  ->  changeCurrentDirectory newPath    
-                          writeToStream stream false "Directory got changed!.\n"
-                          RespondWithServerCode stream ServerReturnCodeEnum.Successfull
+        | CD newPath -> changeCurrentDirectory newPath    
+                        writeToStream stream false "Directory got changed!.\n"
+                        RespondWithServerCode stream ServerReturnCodeEnum.Successfull
         | LIST ->  getResponseToDir() |> writeToStream stream true 
-        | CAT file ->   RespondWithServerCode stream ServerReturnCodeEnum.Successfull 
-                        writeFileToClient file
+        | RETR file -> RespondWithServerCode stream ServerReturnCodeEnum.Successfull 
+                       writeFileToClient file
         | UNSUPPORTED -> writeToStream stream true "Unsupported command!"
     
 module UserSession =

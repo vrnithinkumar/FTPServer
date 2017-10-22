@@ -4,7 +4,7 @@ open System.Net.Sockets
 open ServerHelpers
 
 module ClientHelpers =
-
+    let retrCommandName = "retr"
     let writeCommandGetResult stream userInput =
         userInput+"\r"
         |> writeToStream stream true
@@ -42,7 +42,7 @@ module ClientHelpers =
             | "" | "close" -> keepRunning <- false
             | _ -> ()
                 
-            match userInput.Contains("cat") with
+            match userInput.ToLower().Contains(retrCommandName) with
             | true ->  
                 writeCommandGetResult stream userInput
                 handleDataSocket userInput 

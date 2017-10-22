@@ -11,7 +11,7 @@ module FTPCommands =
         | HELP
         | LIST 
         | CD of string
-        | CAT of string
+        | RETR of string
         | UNSUPPORTED
 
     let parseFTPCommand command = 
@@ -30,7 +30,7 @@ module FTPCommands =
             | "user" -> let userName = cmdArgs in USER userName
             | "pass" -> let password = cmdArgs in PASS password
             | "cd" -> let directory = cmdArgs in CD directory
-            | "cat" -> let fileName = cmdArgs in CAT fileName
+            | "retr" -> let fileName = cmdArgs in RETR fileName
             | _ -> UNSUPPORTED
         | _ -> failwithf "Error! Unsupported command format."
  
@@ -49,7 +49,7 @@ module FTPCommands =
             currentDirectory()
             |> directoryDetails 
             |> String.concat "\n"
-        ". \n..\n" + filesAndFolders
+        "Dir : . \n Dir : ..\n" + filesAndFolders
 
     type ServerReturnCodeEnum =
         | FTPServeReady = 220
