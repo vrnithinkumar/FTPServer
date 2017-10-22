@@ -16,37 +16,34 @@ module FTPCommands =
 
     let parseFTPCommand command = 
         printfn "Parsing %s" command
-        let isSingleCommand = 
-            command.Split ' '
-            |> Array.length < 2
-        
-        if isSingleCommand then
-            match command.ToLower() with
+
+        match command.ToLower().Split ' ' with 
+        | [|cmd|] ->
+            match cmd with
             | "pwd" -> PWD
             | "close" -> CLOSE
             | "help" -> HELP
             | "ls" -> LIST
             | _ -> UNSUPPORTED
-        
-        else
-            let [| cmdName; cmdArgs |] = command.Split ' '
-            match cmdName.ToLower() with
-            | "user" -> let userName = cmdArgs in USER userName        // ---> USER slacker   ---> PASS XXXX   ---> PORT 192,168,150,80,14,178
+        | [| cmdName; cmdArgs |] ->
+            match cmdName with
+            | "user" -> let userName = cmdArgs in USER userName
             | "pass" -> let password = cmdArgs in PASS password
             | "cd" -> let directory = cmdArgs in CD directory
             | "cat" -> let fileName = cmdArgs in CAT fileName
             | _ -> UNSUPPORTED
+        | _ -> failwithf "Error! Unsupported command format."
  
     let getResponseByParsing commandString =
         let command = parseFTPCommand commandString
         printfn "Command %s is %A" commandString command
         match command with
             | CLOSE -> "Connection is closed"
-            | DIR   -> getResponseToDir()
+            | PWD   -> getResponseToDir()
             | HELP  -> "Supported Commands are \n ls \n login \n close \n help \n dir"
             | UNSUPPORTED  -> "Error! \n Not supported!"
+            | _ -> failwith "Not supported yet!"
     
-
     let responseToDir =
         let filesAndFolders =
             currentDirectory()
@@ -76,4 +73,5 @@ module FTPCommands =
         | ServerReturnCodeEnum.ClosingDataConnection    as s -> sprintf "%d  Transfer complete." ((int)s)
         | ServerReturnCodeEnum.ClosingControlConnection as s -> sprintf "%d  Goodbye." ((int)s)
         | ServerReturnCodeEnum.InvalidCredential        as s -> sprintf "%d  Inavalid user name or password." ((int)s)
+        | _ -> failwith "Server return messages is not yet supported!" 
 

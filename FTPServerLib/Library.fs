@@ -94,7 +94,6 @@ module ServerHelpers =
         | CAT file ->   RespondWithServerCode stream ServerReturnCodeEnum.Successfull 
                         writeFileToClient file
         | UNSUPPORTED -> writeToStream stream true "Unsupported command!"
-        | _ -> writeToStream stream true "Unable to find the proper command!"
     
 module UserSession =
     open ServerHelpers
