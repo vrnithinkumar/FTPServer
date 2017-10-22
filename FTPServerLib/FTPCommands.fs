@@ -12,6 +12,7 @@ module FTPCommands =
         | LIST 
         | CD of string
         | RETR of string
+        | STOR of string
         | UNSUPPORTED
 
     let parseFTPCommand command = 
@@ -31,6 +32,7 @@ module FTPCommands =
             | "pass" -> let password = cmdArgs in PASS password
             | "cd" -> let directory = cmdArgs in CD directory
             | "retr" -> let fileName = cmdArgs in RETR fileName
+            | "stor" -> let fileName = cmdArgs in STOR fileName
             | _ -> UNSUPPORTED
         | _ -> failwithf "Error! Unsupported command format."
  

@@ -18,7 +18,7 @@ module ClientHelpers =
         let dataStream = new NetworkStream(acceptedSocket, false) 
                 
         let fileData = readFromStream dataStream
-        printfn "CAT result : %s " fileData 
+        printfn "RETR result : %s " fileData 
         
         let pathToFile = userInput.Split ' ' |> Array.item 1
         writeToFile pathToFile fileData

@@ -72,11 +72,15 @@ module ServerHelpers =
     open ServerHelpers
 
     let writeFileToClient fileName =
-      let data = getFileContent fileName
-      System.Threading.Thread.Sleep 3000
-      let dataSendingSocket = createDataSocket false
-      let stream = new NetworkStream(dataSendingSocket, false) 
-      writeToStream stream true data
+        let data = getFileContent fileName
+        System.Threading.Thread.Sleep 3000
+        let dataSendingSocket = createDataSocket false
+        let stream = new NetworkStream(dataSendingSocket, false) 
+        writeToStream stream true data
+
+    let readFileFromClient fileName =
+        let data = "" // todo : Implement reading from the client data socket
+        writeToFile fileName data
 
     let handleCommand stream cmd =
         match cmd with
@@ -91,6 +95,8 @@ module ServerHelpers =
         | LIST ->  getResponseToDir() |> writeToStream stream true 
         | RETR file -> RespondWithServerCode stream ServerReturnCodeEnum.Successfull 
                        writeFileToClient file
+        | STOR file -> RespondWithServerCode stream ServerReturnCodeEnum.Successfull 
+                       readFileFromClient file
         | UNSUPPORTED -> writeToStream stream true "Unsupported command!"
     
 module UserSession =
