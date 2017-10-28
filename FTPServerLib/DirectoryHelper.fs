@@ -1,18 +1,8 @@
 namespace FTPServerLib
 open System.IO
+open SessionInfo
 
 module DirectoryHelpers =
-    let mutable _currentPath = ""
-    
-    let currentDirectory() = 
-        match _currentPath with
-        | "" -> Directory.GetCurrentDirectory()
-        | _ -> _currentPath
-
-    let changeCurrentDirectory newPath = 
-        _currentPath <- newPath    
-        printfn "Changing dir to %s" _currentPath
-
     let directoryDetails path = 
         let dir = DirectoryInfo(path)
         
@@ -25,10 +15,10 @@ module DirectoryHelpers =
             |> Array.map (fun d -> d.ToString() |> sprintf "Dir : %s")
         Array.append files folders
 
-    let getResponseToDir() =
+    let getResponseToDir(sessionData : SessionData) =
         let filesAndFolders =
-            currentDirectory() 
-            |> directoryDetails 
+            sessionData.currentPath 
+            |> directoryDetails
             |> String.concat "\n"
         "Dir : . \nDir : .. \n"+filesAndFolders
     
@@ -36,7 +26,7 @@ module DirectoryHelpers =
         let file = FileInfo(file)
         file
 
-    let getFileContent file =
-        Path.Combine(currentDirectory(), file) 
+    let getFileContent file (sessionData : SessionData) =
+        Path.Combine(sessionData.currentPath , file) 
         |> File.ReadAllLines
         |> String.concat "\n"

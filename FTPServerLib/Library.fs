@@ -6,11 +6,13 @@ open System.Net.Sockets
 open System.Threading
 open FTPCommands
 open DirectoryHelpers
+open FTPBasic
 
 module ServerConfiguration = 
     let commandPort = 2121
     let dataPort = 2122
     let localHost = "127.0.0.1"
+
 
 // All socket and conneection related stuff.
 module ServerHelpers =
@@ -25,7 +27,6 @@ module ServerHelpers =
             socket.Bind(commandLocalEndPoint)
             socket.Listen(111)  
         | false -> socket.Connect(commandLocalEndPoint)
-        
         socket
 
     let createCommandSocket = createSocket commandPort
@@ -45,7 +46,7 @@ module ServerHelpers =
         socket.Send (data) 
     
     let writeToFile file (dataToWrite:string) =
-        let fullPath = Path.Combine(currentDirectory(), file) 
+        let fullPath = Path.Combine(Directory.GetCurrentDirectory(), file) 
         use fs = File.Create(fullPath)
         let dataInBytes = System.Text.Encoding.ASCII.GetBytes(dataToWrite); 
         fs.Write(dataInBytes, 0, dataInBytes.Length);
@@ -70,9 +71,10 @@ module ServerHelpers =
 
  module CommandResponse =
     open ServerHelpers
+    open SessionInfo
 
-    let writeFileToClient fileName =
-        let data = getFileContent fileName
+    let writeFileToClient fileName (sessionData : SessionData) =
+        let data = getFileContent fileName sessionData
         System.Threading.Thread.Sleep 3000
         let dataSendingSocket = createDataSocket false
         let stream = new NetworkStream(dataSendingSocket, false) 
@@ -82,66 +84,102 @@ module ServerHelpers =
         let data = "" // todo : Implement reading from the client data socket
         writeToFile fileName data
 
-    let handleCommand stream cmd =
+    let handleCommand cmd (sessionData : SessionData) =
+        let updatedSessionData = updateCmdHistory sessionData cmd
+        let stream =  updatedSessionData.stream
         match cmd with
-        | USER user -> failwithf "shouldn't call USER command with args:[%s]" user
-        | PASS pass -> failwithf "shouldn't call PASS command with args:[%s]" pass
-        | HELP -> writeToStream stream true "Help just google it dude!"
-        | CLOSE -> RespondWithServerCode stream ServerReturnCodeEnum.ClosingControlConnection
-        | PWD -> currentDirectory() |> sprintf "Current dir is : %s " |> writeToStream stream true 
-        | CD newPath -> changeCurrentDirectory newPath    
-                        writeToStream stream false "Directory got changed!.\n"
-                        RespondWithServerCode stream ServerReturnCodeEnum.Successfull
-        | LIST ->  getResponseToDir() |> writeToStream stream true 
-        | RETR file -> RespondWithServerCode stream ServerReturnCodeEnum.Successfull 
-                       writeFileToClient file
-        | STOR file -> RespondWithServerCode stream ServerReturnCodeEnum.Successfull 
-                       readFileFromClient file
-        | UNSUPPORTED -> writeToStream stream true "Unsupported command!"
-    
+        | USER user -> 
+            failwithf "shouldn't call USER command with args:[%s]" user
+            updatedSessionData
+        | PASS pass -> 
+            failwithf "shouldn't call PASS command with args:[%s]" pass
+            updatedSessionData
+        | HELP -> 
+            writeToStream stream true "Help just google it dude!"
+            updatedSessionData
+        | CLOSE -> 
+            RespondWithServerCode stream ServerReturnCodeEnum.ClosingControlConnection
+            updatedSessionData
+        | PWD -> 
+            updatedSessionData.currentPath |> sprintf "Current dir is : %s " |> writeToStream stream true 
+            updatedSessionData
+        | CD newPath -> 
+            writeToStream stream false "Directory got changed!.\n"
+            RespondWithServerCode stream ServerReturnCodeEnum.Successfull
+            updateCurrentPath sessionData newPath
+        | LIST ->  
+            getResponseToDir updatedSessionData |> writeToStream stream true 
+            updatedSessionData
+        | RETR file -> 
+            RespondWithServerCode stream ServerReturnCodeEnum.Successfull 
+            writeFileToClient file updatedSessionData
+            updatedSessionData
+        | STOR file -> 
+            RespondWithServerCode stream ServerReturnCodeEnum.Successfull 
+            readFileFromClient file
+            updatedSessionData
+        | PORT port -> 
+            updatedSessionData  
+        | UNSUPPORTED -> 
+            writeToStream stream true "Unsupported command!"
+            updatedSessionData  
+
 module UserSession =
     open ServerHelpers
     open CommandResponse
-    /// this is ran after the user successfully logged in
-    let startUserSession userName (stream:NetworkStream) =
-        // parse commands do stuff
-        let rec readAndParseCommand () =
-            let mutable port = None        // ---> PORT 192,168,150,80,14,178
-            let cmd = readCommand stream
-            handleCommand stream cmd
-            match cmd with
-            | CLOSE -> exit 0                   
-            | _ -> readAndParseCommand ()
-
-        readAndParseCommand ()
+    open SessionInfo
     
-    let handleUserLogin (userName:string, stream:NetworkStream) = 
+    /// this is ran after the user successfully logged in
+    let startUserSession(sessionData:SessionData) =
+        // parse commands do stuff
+        let rec readAndParseCommand sessionData : SessionData =
+            let mutable port = None        // ---> PORT 192,168,150,80,14,178
+            let cmd = readCommand sessionData.stream
+            let updatedSessionData =  handleCommand cmd sessionData
+            match cmd with
+            | CLOSE -> updatedSessionData                   
+            | _ -> readAndParseCommand (updatedSessionData)
+        readAndParseCommand sessionData
+    
+    let handleUserLogin (userName:string, sessionData:SessionData) = 
+        let stream = sessionData.stream
+        let sessionDataWithName = updateUserName sessionData userName
         sprintf "Welocome User,  %s !\n" userName |>  writeToStream stream false
         // ---> USER slacker
         // 331 Password required for slacker.
         RespondWithServerCode stream ServerReturnCodeEnum.PasswordRequest
         let command = readCommand stream
+        let updatedSessionData = updateCmdHistory sessionDataWithName command
         match command with
             | PASS passwd -> 
                 if(passwd = "test") then 
                     RespondWithServerCode stream ServerReturnCodeEnum.Successfull
-                    startUserSession userName stream 
+                    let x = startUserSession updatedSessionData
+                    ()
                 else 
                     RespondWithServerCode stream ServerReturnCodeEnum.InvalidCredential
             | _ -> RespondWithServerCode stream ServerReturnCodeEnum.PasswordRequest
-    
+
     let createSession (socket:Socket) =
         async {
-            let stream = new NetworkStream(socket, false) 
-            writeToStream stream false "Connected to FTP server by F#! \n"  
+            let nStream = new NetworkStream(socket, false) 
+            let sessionData = 
+                {
+                    cmdHistory = List.Empty
+                    currentPath = Directory.GetCurrentDirectory()
+                    stream = nStream;
+                    userName = ""
+                }
+            writeToStream nStream false "Connected to FTP server by F#! \n"  
             //RespondWithServerCode stream ServerReturnCodeEnum.FTPServeReady
             while true do
-                let command = readCommand stream
+                let command = readCommand nStream
+                let updatedSessionData = updateCmdHistory sessionData command
                 match command with
-                | USER userName -> handleUserLogin (userName, stream)
-                | _ -> writeToStream stream true "Login with USER command!.\n"  
+                | USER userName -> handleUserLogin (userName, updatedSessionData)
+                | _ -> writeToStream nStream true "Login with USER command!.\n"  
     
-            stream.Close()
+            nStream.Close()
             socket.Shutdown(SocketShutdown.Both)
             socket.Close()
         }
@@ -159,7 +197,7 @@ module Main =
         while !connectionCount < connectionLimit do
             let socket1 = socket.Accept()
             incr connectionCount    // increase value of connectionCount by 1
-            
+            printfn "Connection %d started." connectionCount.Value
             let cancellationSource = new CancellationTokenSource()
             let sessionAsync = createSession socket1
                                
@@ -168,4 +206,5 @@ module Main =
                                                                         decr connectionCount),
                                                         (fun (x:OperationCanceledException) -> printfn "session cancelled"
                                                                                                decr connectionCount)) 
+            printfn "Connection %d ended." connectionCount.Value
         printfn "Finally finished!"

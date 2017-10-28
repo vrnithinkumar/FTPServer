@@ -3,6 +3,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="CoreLib.fs" />
     <Compile Include="DirectoryHelper.fs" />
     <Compile Include="FTPCommands.fs" />
     <Compile Include="Library.fs" />

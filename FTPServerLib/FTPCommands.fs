@@ -1,21 +1,9 @@
 namespace FTPServerLib
+open FTPBasic
+open SessionInfo
 open DirectoryHelpers
 
 module FTPCommands =
-
-    type SupportedCommands =
-        | PWD
-        | USER of string
-        | PASS of string
-        | CLOSE
-        | HELP
-        | LIST 
-        | CD of string
-        | RETR of string
-        | PORT of int
-        | STOR of string
-        | UNSUPPORTED
-
     let parseFTPCommand command = 
         printfn "Parsing %s" command
 
@@ -37,20 +25,21 @@ module FTPCommands =
             | "port" -> let port = cmdArgs in PORT (int port)
             | _ -> UNSUPPORTED
         | _ -> failwithf "Error! Unsupported command format."
- 
-    let getResponseByParsing commandString =
+
+
+    let getResponseByParsing commandString (sessionData : SessionData) =
         let command = parseFTPCommand commandString
         printfn "Command %s is %A" commandString command
         match command with
             | CLOSE -> "Connection is closed"
-            | PWD   -> getResponseToDir()
+            | PWD   -> getResponseToDir sessionData
             | HELP  -> "Supported Commands are \n ls \n login \n close \n help \n dir"
             | UNSUPPORTED  -> "Error! \n Not supported!"
             | _ -> failwith "Not supported yet!"
     
-    let responseToDir =
+    let responseToDir (sessionData : SessionData)=
         let filesAndFolders =
-            currentDirectory()
+            sessionData.currentPath
             |> directoryDetails 
             |> String.concat "\n"
         "Dir : . \n Dir : ..\n" + filesAndFolders
