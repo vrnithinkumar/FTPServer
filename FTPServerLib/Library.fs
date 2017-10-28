@@ -35,6 +35,7 @@ module ServerHelpers =
     
     let readFromStream (stream:NetworkStream) =
         let buffer: byte [] = Array.zeroCreate 1024
+        let readLen = stream.Read(buffer, 0, 1024)
         let asciiBuffer = System.Text.Encoding.ASCII.GetString(buffer).ToCharArray() 
         let ftpCommand = 
             let charArray: char array = asciiBuffer |> Seq.takeWhile (fun c -> c <> '\r') |> Seq.toArray
@@ -84,9 +85,12 @@ module ServerHelpers =
         let data = "" // todo : Implement reading from the client data socket
         writeToFile fileName data
 
+    // change the order.
+    // Similar to Array.fold make it.
     let handleCommand cmd (sessionData : SessionData) =
         let updatedSessionData = updateCmdHistory sessionData cmd
         let stream =  updatedSessionData.stream
+        // Addling differente helpor method 
         match cmd with
         | USER user -> 
             failwithf "shouldn't call USER command with args:[%s]" user

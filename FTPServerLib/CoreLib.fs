@@ -22,7 +22,7 @@ module SessionInfo =
         {
             cmdHistory : string list
             currentPath : string
-            stream : NetworkStream
+            stream : NetworkStream // remove it from the session data since its is not mutable.
             userName : string
         }
 
