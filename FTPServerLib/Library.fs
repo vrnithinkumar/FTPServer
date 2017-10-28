@@ -104,8 +104,7 @@ module UserSession =
     open CommandResponse
     /// this is ran after the user successfully logged in
     let startUserSession userName (stream:NetworkStream) =
-        // parse commands
-        // do stuff
+        // parse commands do stuff
         let rec readAndParseCommand () =
             let mutable port = None        // ---> PORT 192,168,150,80,14,178
             let cmd = readCommand stream
