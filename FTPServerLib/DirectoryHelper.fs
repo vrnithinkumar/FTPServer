@@ -24,17 +24,18 @@ module DirectoryHelpers =
             dir.GetDirectories()
             |> Array.map (fun d -> d.ToString() |> sprintf "Dir : %s")
         Array.append files folders
-    
+
     let getResponseToDir() =
         let filesAndFolders =
             currentDirectory() 
             |> directoryDetails 
             |> String.concat "\n"
-        ". \n..\n"+filesAndFolders
+        "Dir : . \nDir : .. \n"+filesAndFolders
     
     let getFile file =
         let file = FileInfo(file)
         file
+
     let getFileContent file =
         Path.Combine(currentDirectory(), file) 
         |> File.ReadAllLines
