@@ -85,6 +85,57 @@ module ServerHelpers =
         let data = "" // todo : Implement reading from the client data socket
         writeToFile fileName data
 
+    //----Command handling functions----
+
+    let handleUser (sessionData : SessionData) user =
+        failwithf "shouldn't call USER command with args:[%s]" user
+        sessionData
+    let handlePass (sessionData : SessionData) pass =
+        failwithf "shouldn't call PASS command with args:[%s]" pass
+        sessionData
+    
+    let handleHelp (sessionData : SessionData) =
+         writeToStream sessionData.stream true "Help just google it dude!"
+         sessionData
+
+    let handleClose (sessionData : SessionData) =
+        RespondWithServerCode sessionData.stream ServerReturnCodeEnum.ClosingControlConnection
+        sessionData
+
+    let handlePwd (sessionData : SessionData) =
+        sessionData.currentPath 
+        |> sprintf "Current dir is : %s " 
+        |> writeToStream sessionData.stream true 
+
+        sessionData 
+    
+    let handleCd (sessionData : SessionData) newPath =
+        writeToStream sessionData.stream false "Directory got changed!.\n"
+        RespondWithServerCode sessionData.stream ServerReturnCodeEnum.Successfull
+        updateCurrentPath sessionData newPath
+
+    let handleList (sessionData : SessionData) =
+        getResponseToDir sessionData |> writeToStream sessionData.stream true 
+        sessionData
+
+    let handleRetr (sessionData : SessionData) file = 
+        RespondWithServerCode sessionData.stream ServerReturnCodeEnum.Successfull 
+        writeFileToClient file sessionData
+        sessionData
+    
+    let handleStor (sessionData : SessionData) file = 
+        RespondWithServerCode sessionData.stream ServerReturnCodeEnum.Successfull 
+        readFileFromClient file
+        sessionData
+
+    let handlePort (sessionData : SessionData) port =
+        sessionData
+
+    let handleUnsupported (sessionData : SessionData) =
+        writeToStream sessionData.stream true "Unsupported command!"
+        sessionData  
+    
+    //---------------End----------------
     // change the order.
     // Similar to Array.fold make it.
     let handleCommand (sessionData : SessionData) cmd =
@@ -92,41 +143,18 @@ module ServerHelpers =
         let stream =  updatedSessionData.stream
         // Addling differente helpor method 
         match cmd with
-        | USER user -> 
-            failwithf "shouldn't call USER command with args:[%s]" user
-            updatedSessionData
-        | PASS pass -> 
-            failwithf "shouldn't call PASS command with args:[%s]" pass
-            updatedSessionData
-        | HELP -> 
-            writeToStream stream true "Help just google it dude!"
-            updatedSessionData
-        | CLOSE -> 
-            RespondWithServerCode stream ServerReturnCodeEnum.ClosingControlConnection
-            updatedSessionData
-        | PWD -> 
-            updatedSessionData.currentPath |> sprintf "Current dir is : %s " |> writeToStream stream true 
-            updatedSessionData
-        | CD newPath -> 
-            writeToStream stream false "Directory got changed!.\n"
-            RespondWithServerCode stream ServerReturnCodeEnum.Successfull
-            updateCurrentPath sessionData newPath
-        | LIST ->  
-            getResponseToDir updatedSessionData |> writeToStream stream true 
-            updatedSessionData
-        | RETR file -> 
-            RespondWithServerCode stream ServerReturnCodeEnum.Successfull 
-            writeFileToClient file updatedSessionData
-            updatedSessionData
-        | STOR file -> 
-            RespondWithServerCode stream ServerReturnCodeEnum.Successfull 
-            readFileFromClient file
-            updatedSessionData
-        | PORT port -> 
-            updatedSessionData  
-        | UNSUPPORTED -> 
-            writeToStream stream true "Unsupported command!"
-            updatedSessionData  
+        | USER user -> handleUser updatedSessionData user
+        | PASS pass -> handlePass updatedSessionData pass
+        | HELP -> handleHelp updatedSessionData
+        | CLOSE -> handleClose updatedSessionData
+        | PWD -> handlePwd updatedSessionData
+        | CD newPath -> handleCd updatedSessionData newPath
+        | LIST ->  handleList updatedSessionData
+        | RETR file -> handleRetr updatedSessionData file
+        | STOR file -> handleStor updatedSessionData file
+        | PORT port -> handlePort updatedSessionData port
+        | UNSUPPORTED -> handleUnsupported updatedSessionData
+
 
 module UserSession =
     open ServerHelpers
