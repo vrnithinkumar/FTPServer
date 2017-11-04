@@ -136,8 +136,6 @@ module ServerHelpers =
         sessionData  
     
     //---------------End----------------
-    // change the order.
-    // Similar to Array.fold make it.
     let handleCommand (sessionData : SessionData) cmd =
         let updatedSessionData = updateCmdHistory sessionData cmd
         let stream =  updatedSessionData.stream
@@ -154,7 +152,6 @@ module ServerHelpers =
         | STOR file -> handleStor updatedSessionData file
         | PORT port -> handlePort updatedSessionData port
         | UNSUPPORTED -> handleUnsupported updatedSessionData
-
 
 module UserSession =
     open ServerHelpers
