@@ -94,64 +94,63 @@ module ServerHelpers =
         failwithf "shouldn't call PASS command with args:[%s]" pass
         sessionData
     
-    let handleHelp (sessionData : SessionData) =
-         writeToStream sessionData.stream true "Help just google it dude!"
+    let handleHelp (sessionData : SessionData) stream =
+         writeToStream stream true "Help just google it dude!"
          sessionData
 
-    let handleClose (sessionData : SessionData) =
-        RespondWithServerCode sessionData.stream ServerReturnCodeEnum.ClosingControlConnection
+    let handleClose (sessionData : SessionData) stream =
+        RespondWithServerCode stream ServerReturnCodeEnum.ClosingControlConnection
         sessionData
 
-    let handlePwd (sessionData : SessionData) =
+    let handlePwd (sessionData : SessionData) stream =
         sessionData.currentPath 
         |> sprintf "Current dir is : %s " 
-        |> writeToStream sessionData.stream true 
+        |> writeToStream stream true 
 
         sessionData 
     
-    let handleCd (sessionData : SessionData) newPath =
-        writeToStream sessionData.stream false "Directory got changed!.\n"
-        RespondWithServerCode sessionData.stream ServerReturnCodeEnum.Successfull
+    let handleCd (sessionData : SessionData) stream newPath =
+        writeToStream stream false "Directory got changed!.\n"
+        RespondWithServerCode stream ServerReturnCodeEnum.Successfull
         updateCurrentPath sessionData newPath
 
-    let handleList (sessionData : SessionData) =
-        getResponseToDir sessionData |> writeToStream sessionData.stream true 
+    let handleList (sessionData : SessionData) stream =
+        getResponseToDir sessionData |> writeToStream stream true 
         sessionData
 
-    let handleRetr (sessionData : SessionData) file = 
-        RespondWithServerCode sessionData.stream ServerReturnCodeEnum.Successfull 
+    let handleRetr (sessionData : SessionData) stream file = 
+        RespondWithServerCode stream ServerReturnCodeEnum.Successfull 
         writeFileToClient file sessionData
         sessionData
     
-    let handleStor (sessionData : SessionData) file = 
-        RespondWithServerCode sessionData.stream ServerReturnCodeEnum.Successfull 
+    let handleStor (sessionData : SessionData) stream file  = 
+        RespondWithServerCode stream ServerReturnCodeEnum.Successfull 
         readFileFromClient file
         sessionData
 
-    let handlePort (sessionData : SessionData) port =
+    let handlePort (sessionData : SessionData) stream port =
         sessionData
 
-    let handleUnsupported (sessionData : SessionData) =
-        writeToStream sessionData.stream true "Unsupported command!"
+    let handleUnsupported (sessionData : SessionData) stream =
+        writeToStream stream true "Unsupported command!"
         sessionData  
     
     //---------------End----------------
-    let handleCommand (sessionData : SessionData) cmd =
+    let handleCommand (sessionData : SessionData) stream cmd =
         let updatedSessionData = updateCmdHistory sessionData cmd
-        let stream =  updatedSessionData.stream
         // Addling differente helpor method 
         match cmd with
         | USER user -> handleUser updatedSessionData user
         | PASS pass -> handlePass updatedSessionData pass
-        | HELP -> handleHelp updatedSessionData
-        | CLOSE -> handleClose updatedSessionData
-        | PWD -> handlePwd updatedSessionData
-        | CD newPath -> handleCd updatedSessionData newPath
-        | LIST ->  handleList updatedSessionData
-        | RETR file -> handleRetr updatedSessionData file
-        | STOR file -> handleStor updatedSessionData file
-        | PORT port -> handlePort updatedSessionData port
-        | UNSUPPORTED -> handleUnsupported updatedSessionData
+        | HELP -> handleHelp updatedSessionData stream
+        | CLOSE -> handleClose updatedSessionData stream
+        | PWD -> handlePwd updatedSessionData stream
+        | CD newPath -> handleCd updatedSessionData stream newPath
+        | LIST ->  handleList updatedSessionData stream
+        | RETR file -> handleRetr updatedSessionData stream file
+        | STOR file -> handleStor updatedSessionData stream file
+        | PORT port -> handlePort updatedSessionData stream port
+        | UNSUPPORTED -> handleUnsupported updatedSessionData stream
 
 module UserSession =
     open ServerHelpers
@@ -159,19 +158,18 @@ module UserSession =
     open SessionInfo
     
     /// this is ran after the user successfully logged in
-    let startUserSession(sessionData:SessionData) =
+    let startUserSession(sessionData:SessionData, stream : NetworkStream) =
         // parse commands do stuff
         let rec readAndParseCommand sessionData : SessionData =
             let mutable port = None        // ---> PORT 192,168,150,80,14,178
-            let cmd = readCommand sessionData.stream
-            let updatedSessionData = handleCommand sessionData cmd
+            let cmd = readCommand stream
+            let updatedSessionData = handleCommand sessionData stream cmd
             match cmd with
             | CLOSE -> updatedSessionData                   
             | _ -> readAndParseCommand (updatedSessionData)
-        readAndParseCommand sessionData
+        readAndParseCommand sessionData 
     
-    let handleUserLogin (userName:string, sessionData:SessionData) = 
-        let stream = sessionData.stream
+    let handleUserLogin (userName : string, sessionData : SessionData, stream : NetworkStream) = 
         let sessionDataWithName = updateUserName sessionData userName
         sprintf "Welocome User,  %s !\n" userName |>  writeToStream stream false
         // ---> USER slacker
@@ -183,8 +181,7 @@ module UserSession =
             | PASS passwd -> 
                 if(passwd = "test") then 
                     RespondWithServerCode stream ServerReturnCodeEnum.Successfull
-                    let x = startUserSession updatedSessionData
-                    ()
+                    startUserSession (updatedSessionData, stream) |> ignore
                 else 
                     RespondWithServerCode stream ServerReturnCodeEnum.InvalidCredential
             | _ -> RespondWithServerCode stream ServerReturnCodeEnum.PasswordRequest
@@ -196,7 +193,6 @@ module UserSession =
                 {
                     cmdHistory = List.Empty
                     currentPath = Directory.GetCurrentDirectory()
-                    stream = nStream;
                     userName = ""
                 }
             writeToStream nStream false "Connected to FTP server by F#! \n"  
@@ -205,7 +201,7 @@ module UserSession =
                 let command = readCommand nStream
                 let updatedSessionData = updateCmdHistory sessionData command
                 match command with
-                | USER userName -> handleUserLogin (userName, updatedSessionData)
+                | USER userName -> handleUserLogin (userName, updatedSessionData, nStream)
                 | _ -> writeToStream nStream true "Login with USER command!.\n"  
     
             nStream.Close()

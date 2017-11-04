@@ -18,11 +18,11 @@ module FTPBasic =
 module SessionInfo =
     open FTPBasic
     
+    // A record type
     type SessionData =
         {
             cmdHistory : string list
             currentPath : string
-            stream : NetworkStream // remove it from the session data since its is not mutable.
             userName : string
         }
 
