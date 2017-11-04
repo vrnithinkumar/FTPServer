@@ -87,7 +87,7 @@ module ServerHelpers =
 
     // change the order.
     // Similar to Array.fold make it.
-    let handleCommand cmd (sessionData : SessionData) =
+    let handleCommand (sessionData : SessionData) cmd =
         let updatedSessionData = updateCmdHistory sessionData cmd
         let stream =  updatedSessionData.stream
         // Addling differente helpor method 
@@ -139,7 +139,7 @@ module UserSession =
         let rec readAndParseCommand sessionData : SessionData =
             let mutable port = None        // ---> PORT 192,168,150,80,14,178
             let cmd = readCommand sessionData.stream
-            let updatedSessionData =  handleCommand cmd sessionData
+            let updatedSessionData = handleCommand sessionData cmd
             match cmd with
             | CLOSE -> updatedSessionData                   
             | _ -> readAndParseCommand (updatedSessionData)
