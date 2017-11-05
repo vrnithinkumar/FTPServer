@@ -14,11 +14,12 @@ module ClientHelpers =
 
     let createDataStream () =
         let dataSendingSocket = createDataSocket true
+        printfn "Socket Created!"
         let acceptedSocket = dataSendingSocket.Accept()
+        printfn "Accepted data connection !"
         new NetworkStream(acceptedSocket, false)
 
-
-    let handleDataSocket (userInput:string) =
+    let handleRetr (userInput:string) =
         let dataStream = createDataStream ()
                 
         let fileData = readFromStream dataStream
@@ -62,7 +63,7 @@ module ClientHelpers =
             match userInput.ToLower() with
             | "retr" ->  
                 writeCommandGetResult stream userInput
-                handleDataSocket userInput
+                handleRetr userInput
             | "stor" ->
                 writeCommandGetResult stream userInput
                 handleStor userInput
