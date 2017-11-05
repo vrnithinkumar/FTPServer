@@ -1,5 +1,4 @@
 namespace FTPServerLib
-open System.Net.Sockets
 
 module FTPBasic =
     type SupportedCommands =
@@ -13,6 +12,8 @@ module FTPBasic =
         | RETR of string
         | PORT of int
         | STOR of string
+        | PASSIVE
+        | ACTIVE
         | UNSUPPORTED
 
 module SessionInfo =
@@ -24,14 +25,22 @@ module SessionInfo =
             cmdHistory : string list
             currentPath : string
             userName : string
+            port : int 
+            passiveModeOn : bool
         }
 
     let updateCmdHistory (sessionData : SessionData) (cmd : SupportedCommands) = 
         let newHistory = (string cmd)::sessionData.cmdHistory
-        {sessionData with cmdHistory=newHistory}
+        {sessionData with cmdHistory = newHistory}
     
     let updateCurrentPath (sessionData:SessionData) newPath = 
-        {sessionData with currentPath=newPath}
+        {sessionData with currentPath = newPath}
 
     let updateUserName (sessionData:SessionData) name = 
-         {sessionData with userName=name}
+         {sessionData with userName = name}
+
+    let updatePort (sessionData:SessionData) port = 
+         {sessionData with port = port}
+
+    let updateMode (sessionData:SessionData) mode = 
+         {sessionData with passiveModeOn = mode}

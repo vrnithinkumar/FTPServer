@@ -14,6 +14,8 @@ module FTPCommands =
             | "close" -> CLOSE
             | "help" -> HELP
             | "ls" -> LIST
+            | "passive" -> PASSIVE
+            | "active" -> ACTIVE
             | _ -> UNSUPPORTED
         | [| cmdName; cmdArgs |] ->
             match cmdName with

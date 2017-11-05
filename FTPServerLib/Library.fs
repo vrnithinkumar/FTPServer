@@ -82,9 +82,10 @@ module ServerHelpers =
         writeToStream stream true data
 
     let readFileFromClient fileName =
-        let data = "" // todo : Implement reading from the client data socket
+        let dataSendingSocket = createDataSocket false
+        let stream = new NetworkStream(dataSendingSocket, false) 
+        let data = readFromStream stream 
         writeToFile fileName data
-
     //----Command handling functions----
 
     let handleUser (sessionData : SessionData) user =
@@ -129,7 +130,17 @@ module ServerHelpers =
         sessionData
 
     let handlePort (sessionData : SessionData) stream port =
-        sessionData
+        RespondWithServerCode stream ServerReturnCodeEnum.Successfull 
+        writeToStream stream false "Data Port got registered!.\n"
+        updatePort sessionData port
+    
+    let handleMode (sessionData : SessionData) stream cmd =
+        RespondWithServerCode stream ServerReturnCodeEnum.Successfull
+        writeToStream stream false "Mode got changed!.\n"
+        match cmd with
+        | PASSIVE  -> 
+            updateMode sessionData true
+        | _ -> updateMode sessionData false
 
     let handleUnsupported (sessionData : SessionData) stream =
         writeToStream stream true "Unsupported command!"
@@ -150,6 +161,7 @@ module ServerHelpers =
         | RETR file -> handleRetr updatedSessionData stream file
         | STOR file -> handleStor updatedSessionData stream file
         | PORT port -> handlePort updatedSessionData stream port
+        | PASSIVE | ACTIVE -> handleMode updatedSessionData stream cmd
         | UNSUPPORTED -> handleUnsupported updatedSessionData stream
 
 module UserSession =
@@ -194,6 +206,8 @@ module UserSession =
                     cmdHistory = List.Empty
                     currentPath = Directory.GetCurrentDirectory()
                     userName = ""
+                    port = 1
+                    passiveModeOn = false
                 }
             writeToStream nStream false "Connected to FTP server by F#! \n"  
             //RespondWithServerCode stream ServerReturnCodeEnum.FTPServeReady
