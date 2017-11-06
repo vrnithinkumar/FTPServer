@@ -36,6 +36,7 @@ module ServerHelpers =
     let readFromStream (stream:NetworkStream) =
         let buffer: byte [] = Array.zeroCreate 1024
         let readLen = stream.Read(buffer, 0, 1024)
+        // Fix issue while 
         let asciiBuffer = System.Text.Encoding.ASCII.GetString(buffer).ToCharArray() 
         let ftpCommand = 
             let charArray: char array = asciiBuffer |> Seq.takeWhile (fun c -> c <> '\r') |> Seq.toArray
@@ -86,8 +87,8 @@ module ServerHelpers =
         let stream = new NetworkStream(dataSendingSocket, false) 
         let data = readFromStream stream 
         writeToFile fileName data
-    //----Command handling functions----
 
+    //----Command handling functions----
     let handleUser (sessionData : SessionData) user =
         failwithf "shouldn't call USER command with args:[%s]" user
         sessionData
@@ -115,11 +116,11 @@ module ServerHelpers =
         RespondWithServerCode stream ServerReturnCodeEnum.Successfull
         updateCurrentPath sessionData newPath
 
-    let handleList (sessionData : SessionData) stream =
+    let handleList sessionData stream =
         getResponseToDir sessionData |> writeToStream stream true 
         sessionData
 
-    let handleRetr (sessionData : SessionData) stream file = 
+    let handleRetr sessionData stream file = 
         RespondWithServerCode stream ServerReturnCodeEnum.Successfull 
         writeFileToClient file sessionData
         sessionData
@@ -129,12 +130,12 @@ module ServerHelpers =
         readFileFromClient file
         sessionData
 
-    let handlePort (sessionData : SessionData) stream port =
+    let handlePort sessionData stream port =
         RespondWithServerCode stream ServerReturnCodeEnum.Successfull 
         writeToStream stream false "Data Port got registered!.\n"
         updatePort sessionData port
     
-    let handleMode (sessionData : SessionData) stream cmd =
+    let handleMode sessionData stream cmd =
         RespondWithServerCode stream ServerReturnCodeEnum.Successfull
         writeToStream stream false "Mode got changed!.\n"
         match cmd with
@@ -160,7 +161,7 @@ module ServerHelpers =
         | LIST ->  handleList updatedSessionData stream
         | RETR file -> handleRetr updatedSessionData stream file
         | STOR file -> handleStor updatedSessionData stream file
-        | PORT port -> handlePort updatedSessionData stream port
+        | PORT port -> handlePort updatedSessionData stream <| Some(port)
         | PASSIVE | ACTIVE -> handleMode updatedSessionData stream cmd
         | UNSUPPORTED -> handleUnsupported updatedSessionData stream
 
@@ -173,7 +174,6 @@ module UserSession =
     let startUserSession(sessionData:SessionData, stream : NetworkStream) =
         // parse commands do stuff
         let rec readAndParseCommand sessionData : SessionData =
-            let mutable port = None        // ---> PORT 192,168,150,80,14,178
             let cmd = readCommand stream
             let updatedSessionData = handleCommand sessionData stream cmd
             match cmd with
@@ -206,7 +206,7 @@ module UserSession =
                     cmdHistory = List.Empty
                     currentPath = Directory.GetCurrentDirectory()
                     userName = ""
-                    port = 1
+                    port = None
                     passiveModeOn = false
                 }
             writeToStream nStream false "Connected to FTP server by F#! \n"  

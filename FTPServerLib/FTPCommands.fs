@@ -63,10 +63,9 @@ module FTPCommands =
         | ServerReturnCodeEnum.PasswordRequest          as s -> sprintf "%d  Password required."  ((int)s)
         | ServerReturnCodeEnum.UserLoggedIn             as s -> sprintf "%d  user logged in." ((int)s)
         | ServerReturnCodeEnum.NameSystemTyp            as s -> sprintf "%d" ((int)s)
-        | ServerReturnCodeEnum.Successfull              as s -> sprintf "%d  PORT command successful."  ((int)s)  
+        | ServerReturnCodeEnum.Successfull              as s -> sprintf "%d command successful."  ((int)s)  
         | ServerReturnCodeEnum.FileStatusOkay           as s -> sprintf "%d " ((int)s)
         | ServerReturnCodeEnum.ClosingDataConnection    as s -> sprintf "%d  Transfer complete." ((int)s)
         | ServerReturnCodeEnum.ClosingControlConnection as s -> sprintf "%d  Goodbye." ((int)s)
         | ServerReturnCodeEnum.InvalidCredential        as s -> sprintf "%d  Inavalid user name or password." ((int)s)
         | _ -> failwith "Server return messages is not yet supported!" 
-

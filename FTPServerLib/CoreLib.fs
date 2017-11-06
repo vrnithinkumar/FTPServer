@@ -25,7 +25,7 @@ module SessionInfo =
             cmdHistory : string list
             currentPath : string
             userName : string
-            port : int 
+            port : int option // make this as option type.
             passiveModeOn : bool
         }
 
