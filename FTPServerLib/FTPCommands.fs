@@ -41,7 +41,7 @@ module FTPCommands =
     
     let responseToDir (sessionData : SessionData)=
         let filesAndFolders =
-            sessionData.currentPath
+            sessionData.CurrentPath
             |> directoryDetails 
             |> String.concat "\n"
         "Dir : . \n Dir : ..\n" + filesAndFolders

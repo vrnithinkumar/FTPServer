@@ -105,7 +105,7 @@ module ServerHelpers =
         sessionData
 
     let handlePwd (sessionData : SessionData) stream =
-        sessionData.currentPath 
+        sessionData.CurrentPath 
         |> sprintf "Current dir is : %s " 
         |> writeToStream stream true 
 
@@ -203,11 +203,11 @@ module UserSession =
             let nStream = new NetworkStream(socket, false) 
             let sessionData = 
                 {
-                    cmdHistory = List.Empty
-                    currentPath = Directory.GetCurrentDirectory()
-                    userName = ""
-                    port = None
-                    passiveModeOn = false
+                    CmdHistory = List.Empty
+                    CurrentPath = Directory.GetCurrentDirectory()
+                    UserName = ""
+                    Port = None
+                    PassiveModeOn = false
                 }
             writeToStream nStream false "Connected to FTP server by F#! \n"  
             //RespondWithServerCode stream ServerReturnCodeEnum.FTPServeReady

@@ -17,7 +17,7 @@ module DirectoryHelpers =
 
     let getResponseToDir(sessionData : SessionData) =
         let filesAndFolders =
-            sessionData.currentPath 
+            sessionData.CurrentPath 
             |> directoryDetails
             |> String.concat "\n"
         "Dir : . \nDir : .. \n"+filesAndFolders
@@ -27,6 +27,6 @@ module DirectoryHelpers =
         file
 
     let getFileContent file (sessionData : SessionData) =
-        Path.Combine(sessionData.currentPath , file) 
+        Path.Combine(sessionData.CurrentPath , file) 
         |> File.ReadAllLines
         |> String.concat "\n"

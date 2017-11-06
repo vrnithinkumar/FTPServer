@@ -22,25 +22,25 @@ module SessionInfo =
     // A record type
     type SessionData =
         {
-            cmdHistory : string list
-            currentPath : string
-            userName : string
-            port : int option // make this as option type.
-            passiveModeOn : bool
+            CmdHistory : string list
+            CurrentPath : string
+            UserName : string
+            Port : int option // make this as option type.
+            PassiveModeOn : bool
         }
 
     let updateCmdHistory (sessionData : SessionData) (cmd : SupportedCommands) = 
-        let newHistory = (string cmd)::sessionData.cmdHistory
-        {sessionData with cmdHistory = newHistory}
+        let newHistory = (string cmd)::sessionData.CmdHistory
+        {sessionData with CmdHistory = newHistory}
     
     let updateCurrentPath (sessionData:SessionData) newPath = 
-        {sessionData with currentPath = newPath}
+        {sessionData with CurrentPath = newPath}
 
     let updateUserName (sessionData:SessionData) name = 
-         {sessionData with userName = name}
+         {sessionData with UserName = name}
 
     let updatePort (sessionData:SessionData) port = 
-         {sessionData with port = port}
+         {sessionData with Port = port}
 
     let updateMode (sessionData:SessionData) mode = 
-         {sessionData with passiveModeOn = mode}
+         {sessionData with PassiveModeOn = mode}
