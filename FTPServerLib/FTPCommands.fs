@@ -28,6 +28,10 @@ module FTPCommands =
             | _ -> UNSUPPORTED
         | _ -> failwithf "Error! Unsupported command format."
 
+    let createHelpCommands () =
+        Reflection.FSharpType.GetUnionCases typeof<SupportedCommands>
+        |> Seq.map (fun case -> case.Name)
+        |> String.concat "\n"
 
     let getResponseByParsing commandString (sessionData : SessionData) =
         let command = parseFTPCommand commandString
@@ -35,11 +39,11 @@ module FTPCommands =
         match command with
             | CLOSE -> "Connection is closed"
             | PWD   -> getResponseToDir sessionData
-            | HELP  -> "Supported Commands are \n ls \n login \n close \n help \n dir"
+            | HELP  -> "Supported Commands are \n " + createHelpCommands()
             | UNSUPPORTED  -> "Error! \n Not supported!"
             | _ -> failwith "Not supported yet!"
     
-    let responseToDir (sessionData : SessionData)=
+    let responseToDir sessionData =
         let filesAndFolders =
             sessionData.CurrentPath
             |> directoryDetails 
