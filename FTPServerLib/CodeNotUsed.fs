@@ -147,3 +147,8 @@ module SocketClient =
     
     taskClient.Wait()
     taskClient.Result |> Array.iter (fun elem -> printf "%d " elem)
+
+    let foo a = 
+        match a with 
+        | 1 -> printfn "One"
+        | x -> printfn "%A" x

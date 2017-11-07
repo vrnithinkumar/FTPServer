@@ -104,14 +104,13 @@ module ServerHelpers =
         RespondWithServerCode stream ServerReturnCodeEnum.ClosingControlConnection
         sessionData
 
-    let handlePwd (sessionData : SessionData) stream =
+    let handlePwd sessionData stream =
         sessionData.CurrentPath 
         |> sprintf "Current dir is : %s " 
         |> writeToStream stream true 
-
         sessionData 
     
-    let handleCd (sessionData : SessionData) stream newPath =
+    let handleCd sessionData stream newPath =
         writeToStream stream false "Directory got changed!.\n"
         RespondWithServerCode stream ServerReturnCodeEnum.Successfull
         updateCurrentPath sessionData newPath
@@ -174,11 +173,11 @@ module UserSession =
     let startUserSession(sessionData:SessionData, stream : NetworkStream) =
         // parse commands do stuff
         let rec readAndParseCommand sessionData : SessionData =
-            let cmd = readCommand stream
-            let updatedSessionData = handleCommand sessionData stream cmd
-            match cmd with
-            | CLOSE -> updatedSessionData                   
-            | _ -> readAndParseCommand (updatedSessionData)
+            match readCommand stream with
+            | CLOSE -> handleCommand sessionData stream CLOSE                
+            | cmd ->
+                handleCommand sessionData stream cmd
+                |> readAndParseCommand
         readAndParseCommand sessionData 
     
     let handleUserLogin (userName : string, sessionData : SessionData, stream : NetworkStream) = 
