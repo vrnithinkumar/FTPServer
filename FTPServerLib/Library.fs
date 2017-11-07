@@ -170,7 +170,7 @@ module UserSession =
     open SessionInfo
     
     /// this is ran after the user successfully logged in
-    let startUserSession(sessionData:SessionData, stream : NetworkStream) =
+    let startUserSession sessionData stream =
         // parse commands do stuff
         let rec readAndParseCommand sessionData : SessionData =
             match readCommand stream with
@@ -180,24 +180,29 @@ module UserSession =
                 |> readAndParseCommand
         readAndParseCommand sessionData 
     
-    let handleUserLogin (userName : string, sessionData : SessionData, stream : NetworkStream) = 
+    let handleUserLogin userName sessionData stream = 
         let sessionDataWithName = updateUserName sessionData userName
         sprintf "Welocome User,  %s !\n" userName |>  writeToStream stream false
-        // ---> USER slacker
-        // 331 Password required for slacker.
+
         RespondWithServerCode stream ServerReturnCodeEnum.PasswordRequest
-        let command = readCommand stream
-        let updatedSessionData = updateCmdHistory sessionDataWithName command
-        match command with
+
+        match userName.ToUpper() with 
+        | "ANONYMOUS" -> 
+            RespondWithServerCode stream ServerReturnCodeEnum.Successfull
+            startUserSession sessionData stream |> ignore
+        | _ ->
+            let command = readCommand stream
+            let updatedSessionData = updateCmdHistory sessionDataWithName command
+            match command with
             | PASS passwd -> 
                 if(passwd = "test") then 
                     RespondWithServerCode stream ServerReturnCodeEnum.Successfull
-                    startUserSession (updatedSessionData, stream) |> ignore
+                    startUserSession updatedSessionData stream |> ignore
                 else 
                     RespondWithServerCode stream ServerReturnCodeEnum.InvalidCredential
             | _ -> RespondWithServerCode stream ServerReturnCodeEnum.PasswordRequest
 
-    let createSession (socket:Socket) =
+    let createSession socket =
         async {
             let nStream = new NetworkStream(socket, false) 
             let sessionData = 
@@ -214,7 +219,7 @@ module UserSession =
                 let command = readCommand nStream
                 let updatedSessionData = updateCmdHistory sessionData command
                 match command with
-                | USER userName -> handleUserLogin (userName, updatedSessionData, nStream)
+                | USER userName -> handleUserLogin userName updatedSessionData nStream
                 | _ -> writeToStream nStream true "Login with USER command!.\n"  
     
             nStream.Close()
