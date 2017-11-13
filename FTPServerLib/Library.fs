@@ -33,17 +33,22 @@ module ServerHelpers =
     
     let createDataSocket = createSocket dataPort
     
-    let readFromStream (stream:NetworkStream) =
-        let buffer: byte [] = Array.zeroCreate 1024
-        let readLen = stream.Read(buffer, 0, 1024)
-        // Fix issue while 
-        let asciiBuffer = System.Text.Encoding.ASCII.GetString(buffer).ToCharArray() 
-        let ftpCommand = 
-            let charArray: char array = asciiBuffer |> Seq.takeWhile (fun c -> c <> '\r') |> Seq.toArray
-            String charArray
-        //printfn "Received Command : %s " ftpCommand
-        ftpCommand
-    
+    let readFromStream (stream : NetworkStream) =
+        let rec readRecursive(result : string) =
+            match stream.DataAvailable with
+            | false -> result 
+            | true ->
+                let buffer: byte [] = Array.zeroCreate 1024
+                let readLen = stream.Read(buffer, 0, 1024)
+                let asciiBuffer = System.Text.Encoding.ASCII.GetString(buffer).ToCharArray() 
+                let charArray: char array = 
+                    asciiBuffer 
+                    |> Seq.takeWhile (fun c -> c <> '\r') 
+                    |> Seq.toArray
+                let dataRead = String charArray
+                readRecursive result + dataRead
+        readRecursive ""
+
     let writeToSocket(socket:Socket) (data:byte array) =
         socket.Send (data) 
     
