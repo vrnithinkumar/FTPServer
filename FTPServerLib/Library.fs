@@ -39,7 +39,7 @@ module ServerHelpers =
             | false -> result 
             | true ->
                 let buffer: byte [] = Array.zeroCreate 1024
-                let readLen = stream.Read(buffer, 0, 1024)
+                stream.Read(buffer, 0, 1024) |> ignore
                 let asciiBuffer = System.Text.Encoding.ASCII.GetString(buffer).ToCharArray() 
                 let charArray: char array = 
                     asciiBuffer 
@@ -243,12 +243,12 @@ module Main =
         
         while !connectionCount < connectionLimit do
             let socket1 = socket.Accept()
-            incr connectionCount    // increase value of connectionCount by 1
+            incr connectionCount
             printfn "Connection %d started." connectionCount.Value
             let cancellationSource = new CancellationTokenSource()
             let sessionAsync = createSession socket1
                                
-            Async.StartWithContinuations (sessionAsync, (fun () -> decr connectionCount), // decrease by 1
+            Async.StartWithContinuations (sessionAsync, (fun () -> decr connectionCount),
                                                         (fun (x:exn) -> printfn "%s \n%s" x.Message x.StackTrace
                                                                         decr connectionCount),
                                                         (fun (x:OperationCanceledException) -> printfn "session cancelled"
