@@ -149,8 +149,7 @@ module ServerHelpers =
 
     let handleUnsupported (sessionData : SessionData) stream =
         writeToStream stream true "Unsupported command!"
-        sessionData  
-    
+        sessionData 
     //---------------End----------------
     let handleCommand (sessionData : SessionData) stream cmd =
         let updatedSessionData = updateCmdHistory sessionData cmd
@@ -253,6 +252,6 @@ module Main =
                                                         (fun (x:exn) -> printfn "%s \n%s" x.Message x.StackTrace
                                                                         decr connectionCount),
                                                         (fun (x:OperationCanceledException) -> printfn "session cancelled"
-                                                                                               decr connectionCount)) 
+                                                                                               decr connectionCount))
             printfn "Connection %d ended." connectionCount.Value
         printfn "Finally finished!"
