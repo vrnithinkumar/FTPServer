@@ -100,10 +100,11 @@ module ServerHelpers =
 
     //----Command handling functions----
     let handleUser (sessionData : SessionData) user =
-        failwithf "shouldn't call USER command with args:[%s]" user
+        failwithf "Shouldn't call USER command with args:[%s]" user
         sessionData
+
     let handlePass (sessionData : SessionData) pass =
-        failwithf "shouldn't call PASS command with args:[%s]" pass
+        failwithf "Shouldn't call PASS command with args:[%s]" pass
         sessionData
     
     let handleHelp (sessionData : SessionData) stream =
@@ -256,7 +257,7 @@ module Main =
             Async.StartWithContinuations (sessionAsync, (fun () -> decr connectionCount),
                                                         (fun (x:exn) -> printfn "%s \n%s" x.Message x.StackTrace
                                                                         decr connectionCount),
-                                                        (fun (x:OperationCanceledException) -> printfn "session cancelled"
+                                                        (fun (x:OperationCanceledException) -> printfn "Session cancelled"
                                                                                                decr connectionCount))
             printfn "Connection %d ended." connectionCount.Value
         printfn "Finally finished!"
