@@ -72,17 +72,23 @@ module ClientHelpers =
         while keepRunning do
             // Encode the data string into a byte array.  
             let userInput = Console.ReadLine()
+            let handleInput = handleInputAsync (stream, userInput)  
 
             match userInput.ToLower() with
-                | "" | "close" -> cancellationSource.Cancel()
-                | _ -> ()
-           
-            let handleInput = handleInputAsync (stream, userInput)  
-            Async.StartWithContinuations (handleInput, 
-                                         (fun () -> printfn "finished command execution !"),
-                                                        (fun (x : exn) -> printfn "%s \n%s" x.Message x.StackTrace),
-                                                        (fun (e : OperationCanceledException) -> printfn "cancelled"),
-                                                        cancellationSource.Token)
+                | "" | "close" -> 
+                    Async.RunSynchronously(handleInput)
+                    cancellationSource.Cancel()
+                | "quit" -> 
+                    Async.RunSynchronously(handleInputAsync(stream, "close"))
+                    cancellationSource.Cancel()
+                    keepRunning <- false
+                | _ ->
+                    Async.StartWithContinuations (
+                        handleInput, 
+                        (fun () -> printfn "Finished command execution !"),
+                        (fun (x : exn) -> printfn "%s \n%s" x.Message x.StackTrace),
+                        (fun (e : OperationCanceledException) -> printfn "Cancelled"),
+                        cancellationSource.Token)
 
         // Releasing the socket.  
         stream.Close()
