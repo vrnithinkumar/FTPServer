@@ -2,6 +2,7 @@ namespace FTPServerLib
 open System
 open System.Net.Sockets
 open ServerHelpers
+open System.Threading
 
 module ClientHelpers =
     let retrCommandName = "retr"
@@ -46,31 +47,42 @@ module ClientHelpers =
         writeToStream dataStream true data
         
         printfn "Finished data connection !"
-        
+
+    let handleInputAsync (stream, userInput:string) =
+        async {
+                match userInput.ToLower() with
+                | "retr" ->  
+                    writeCommandGetResult stream userInput
+                    handleRetr userInput
+                | "stor" ->
+                    writeCommandGetResult stream userInput
+                    handleStor userInput
+                | "passive" ->
+                    writeCommandGetResult stream userInput
+                    sprintf "port %d" ServerConfiguration.dataPort |> writeToStream stream true
+                | _ -> writeCommandGetResult stream userInput
+        }
+
     let CreateClient() =  
         let client = createCommandSocket false
         let stream = new NetworkStream(client, false) 
         //writeToStream stream ""
         let mutable keepRunning = true
+        let cancellationSource = new CancellationTokenSource()
         while keepRunning do
             // Encode the data string into a byte array.  
             let userInput = Console.ReadLine()
-            
+
             match userInput.ToLower() with
-            | "" | "close" -> keepRunning <- false
-            | _ -> ()
-                
-            match userInput.ToLower() with
-            | "retr" ->  
-                writeCommandGetResult stream userInput
-                handleRetr userInput
-            | "stor" ->
-                writeCommandGetResult stream userInput
-                handleStor userInput
-            | "passive" ->
-                writeCommandGetResult stream userInput
-                sprintf "port %d" ServerConfiguration.dataPort |> writeToStream stream true
-            | _ -> writeCommandGetResult stream userInput
+                | "" | "close" -> cancellationSource.Cancel()
+                | _ -> ()
+           
+            let handleInput = handleInputAsync (stream, userInput)  
+            Async.StartWithContinuations (handleInput, 
+                                         (fun () -> printfn "finished command execution !"),
+                                                        (fun (x : exn) -> printfn "%s \n%s" x.Message x.StackTrace),
+                                                        (fun (e : OperationCanceledException) -> printfn "cancelled"),
+                                                        cancellationSource.Token)
 
         // Releasing the socket.  
         stream.Close()

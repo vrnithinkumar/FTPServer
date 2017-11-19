@@ -206,7 +206,7 @@ module UserSession =
                     RespondWithServerCode stream ServerReturnCodeEnum.InvalidCredential
             | _ -> RespondWithServerCode stream ServerReturnCodeEnum.PasswordRequest
 
-    let createSession socket =
+    let createSessionAsync socket =
         async {
             let nStream = new NetworkStream(socket, false) 
             let sessionData = 
@@ -246,7 +246,7 @@ module Main =
             incr connectionCount
             printfn "Connection %d started." connectionCount.Value
             let cancellationSource = new CancellationTokenSource()
-            let sessionAsync = createSession socket1
+            let sessionAsync = createSessionAsync socket1
                                
             Async.StartWithContinuations (sessionAsync, (fun () -> decr connectionCount),
                                                         (fun (x:exn) -> printfn "%s \n%s" x.Message x.StackTrace
