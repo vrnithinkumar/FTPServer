@@ -1,4 +1,5 @@
 # Powershell script to run the both client as well as the server two consoles. it' just for windows.
+dotnet build
 Invoke-Expression 'cmd /c start powershell -Command {write-host "Starting the Server!"; dotnet run --project .\ConsoleApp\ConsoleApp.fsproj }'
 Write-Host "Waiting for 3 seconds for server to start.!"
 Start-Sleep -s 3 

@@ -32,22 +32,27 @@ module ServerHelpers =
     let createCommandSocket = createSocket commandPort
     
     let createDataSocket = createSocket dataPort
-    
+
+    let readDataChunk (stream : NetworkStream) =
+        let buffer: byte [] = Array.zeroCreate 1024
+        stream.Read(buffer, 0, 1024) |> ignore
+        let asciiBuffer = System.Text.Encoding.ASCII.GetString(buffer).ToCharArray() 
+        let charArray: char array = 
+            asciiBuffer 
+            |> Seq.takeWhile (fun c -> c <> '\r') 
+            |> Seq.toArray
+        String charArray 
+
     let readFromStream (stream : NetworkStream) =
         let rec readRecursive(result : string) =
             match stream.DataAvailable with
             | false -> result 
             | true ->
-                let buffer: byte [] = Array.zeroCreate 1024
-                stream.Read(buffer, 0, 1024) |> ignore
-                let asciiBuffer = System.Text.Encoding.ASCII.GetString(buffer).ToCharArray() 
-                let charArray: char array = 
-                    asciiBuffer 
-                    |> Seq.takeWhile (fun c -> c <> '\r') 
-                    |> Seq.toArray
-                let dataRead = String charArray
-                readRecursive result + dataRead
-        readRecursive ""
+                let nextChunk = readDataChunk stream
+                readRecursive result + nextChunk
+        
+        let firstChunk = readDataChunk stream
+        readRecursive firstChunk
 
     let writeToSocket(socket:Socket) (data:byte array) =
         socket.Send (data) 
