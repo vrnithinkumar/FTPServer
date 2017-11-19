@@ -9,6 +9,8 @@ module ClientHelpers =
     let writeCommandGetResult stream userInput =
         userInput+"\r"
         |> writeToStream stream true
+        // todo : How to remove this thread sleep?
+        // Something with async rather than busy sleeping
         System.Threading.Thread.Sleep 3000
         let respString = readFromStream stream
         printfn "Reply from server : %s " respString
